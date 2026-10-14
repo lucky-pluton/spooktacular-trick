@@ -11,6 +11,7 @@ import { sounds } from '../audio/soundEffects';
 export default function PracticeMode({ onBackToStory }) {
   const [selectedProblemIndex, setSelectedProblemIndex] = useState(0);
   const problem = PRACTICE_PROBLEMS[selectedProblemIndex];
+  const correctHundreds = Math.floor(problem.minuend / 100) - 1;
 
   // User input answers
   const [ansOnes, setAnsOnes] = useState('');

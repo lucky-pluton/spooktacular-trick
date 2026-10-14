@@ -1,27 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import HauntedHouse from './HauntedHouse';
 import TrickOrTreater from './TrickOrTreater';
 import CandyBag from './CandyBag';
-import DialogueBubble from './DialogueBubble';
 import PlaceValueBoard from './PlaceValueBoard';
 import ProgressBar from './ProgressBar';
-import ContextualQuestion from './ContextualQuestion';
 import LevelCompleteModal from './LevelCompleteModal';
 import { LEVELS } from '../data/gameScenes';
 import { sounds } from '../audio/soundEffects';
 
 /**
  * GamePage Component
- * Orchestrates the Spooktacular Trick Halloween place-value subtraction adventure.
- * Key features:
- * 1. Contextual Questions: Question card appears adjacent to the active house, transfer, or board column.
- * 2. Visual mathematical updates: Houses and PlaceValueBoard update together when candies transfer.
- * 3. Rewarding Points System: +100 first attempt, +50 retry, +200 level bonus, +50 no-hint bonus, +500 wizard bonus.
- * 4. Engaging Level Completion Popups: Celebratory modals between levels and Grand Wizard finale.
- * 5. 5 Mandatory sequential levels with lock/unlock progression.
+ * Redesigned as an Interactive Subtraction Workspace & Maths Notebook:
+ * 
+ * 1. Questions INSIDE the Haunted Houses:
+ *    Hundreds, Tens, and Ones houses are living characters and active workspaces.
+ *    Questions appear directly inside the house whose place value is being operated on.
+ * 2. Working Maths Notebook:
+ *    Layout features three houses side-by-side above, with the persistent written subtraction
+ *    board directly below, updating in place like classroom notebook paper.
+ * 3. Step-by-Step Borrowing & Calculation:
+ *    Shows crossed-out original digits with regrouped values written above.
+ *    Result row updates column-by-column (_ _ 7 -> _ 4 7 -> 4 4 7).
+ * 4. 5 Compulsory Sequential Levels:
+ *    500−53=447, 400−65=335, 300−28=272, 600−84=516, 700−49=651.
+ * 5. Points & Celebratory Level Completion Modals.
  */
 export default function GamePage({ onOpenStory, onOpenPractice }) {
-  // Level progression
+  // Level progression (5 compulsory sequential levels)
   const [currentLevelNumber, setCurrentLevelNumber] = useState(1);
   const [unlockedLevels, setUnlockedLevels] = useState([1]);
   const [completedLevels, setCompletedLevels] = useState([]);
@@ -38,6 +43,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
   const [houses, setHouses] = useState(activeStep.houses);
   const [boardState, setBoardState] = useState(activeStep.boardState);
   const [flyingBag, setFlyingBag] = useState(null);
+  const [askingNotice, setAskingNotice] = useState(null);
 
   // Scoring and Reward Points System
   const [totalScore, setTotalScore] = useState(0);
@@ -49,7 +55,6 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
   const [hintVisible, setHintVisible] = useState(false);
 
   // Tracking question attempts to prevent duplicate points
-  // questionId -> number of attempts (0 = first try, >0 = retry)
   const [questionAttempts, setQuestionAttempts] = useState({});
   const [awardedQuestionKeys, setAwardedQuestionKeys] = useState([]);
 
@@ -57,16 +62,13 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
   const [answers, setAnswers] = useState({ H: null, T: null, O: null });
   const [collectedCandies, setCollectedCandies] = useState(0);
 
-  // Question interaction state
+  // Active question interaction state
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [feedback, setFeedback] = useState('');
 
-  // Level Complete Modal State
+  // Celebratory Level Complete Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Ref for auto-scrolling to contextual questions on mobile
-  const questionCardRef = useRef(null);
 
   // Smooth counting animation for display score
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     return () => clearTimeout(timer);
   }, [totalScore, displayScore]);
 
-  // Helper to cleanly transition between steps/levels without state lag
+  // Helper to cleanly transition between steps and levels
   const goToStep = (levelNum, stepIdx) => {
     const targetLevel = LEVELS[levelNum - 1] || LEVELS[0];
     const targetStep = targetLevel.steps[stepIdx] || targetLevel.steps[0];
@@ -95,27 +97,20 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     setFeedback('');
     setHintVisible(false);
     setFlyingBag(null);
+    setAskingNotice(null);
   };
 
-  // Speak dialogue and scroll on mobile when step changes
+  // Speak character speech whenever step changes
   useEffect(() => {
     if (activeStep.speechText) {
       sounds.speak(activeStep.speechText);
     }
-    if (questionCardRef.current && typeof window !== 'undefined' && window.innerWidth < 768) {
-      questionCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
   }, [activeStep.speechText, activeStep.stepId]);
-
-  // Handle Start Level for Intro steps
-  const handleStartGame = () => {
-    goToStep(currentLevelNumber, 1);
-  };
 
   // Unique key for the current question
   const currentQuestionKey = `lvl${currentLevelNumber}_step${activeStep.stepId}`;
 
-  // Handle multiple-choice option selection
+  // Handle multiple-choice selection inside the active house
   const handleSelectOption = (opt) => {
     setSelectedOption(opt.id ?? opt.value);
     const attempts = questionAttempts[currentQuestionKey] || 0;
@@ -124,7 +119,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
       setIsCorrect(true);
       sounds.playSuccess();
 
-      // Check if points were already awarded for this question to prevent duplicate rewards
+      // Check if points were already awarded for this question to prevent duplicates
       const alreadyAwarded = awardedQuestionKeys.includes(currentQuestionKey);
       let awardedPts = 0;
 
@@ -134,7 +129,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         setTotalScore((s) => s + awardedPts);
         setLevelPointsEarned((p) => p + awardedPts);
 
-        // Trigger floating reward popup
+        // Trigger floating reward popup on the active house
         setFloatingReward({
           points: awardedPts,
           label: attempts === 0 ? 'First Try! 🍬' : 'Learned from Clues! ⭐',
@@ -145,7 +140,12 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
       const pointsText = awardedPts > 0 ? ` +${awardedPts} points!` : '';
       setFeedback(opt.feedback ? `${opt.feedback}${pointsText}` : `Correct!${pointsText}`);
 
-      // Handle animated candy bag borrowing transfer if defined for this step
+      // Handle asking animation between houses (e.g. Ones asks Tens, Tens asks Hundreds)
+      if (activeStep.askingAnimation) {
+        setAskingNotice(activeStep.askingAnimation.message);
+      }
+
+      // Handle animated candy bag transfer if defined for this step
       if (activeStep.bagAnimation) {
         const bag = activeStep.bagAnimation;
         setFlyingBag({
@@ -163,16 +163,15 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
             setHouses(activeStep.housesAfter);
           }
           if (activeStep.boardState) {
-            // Regrouped digits become visible on the board
             setBoardState((prev) => ({
               ...prev,
               ...activeStep.boardState,
             }));
           }
-        }, 1700);
+        }, 1600);
       }
 
-      // Update subtraction answer if this is a column subtraction step
+      // Update subtraction answers and trick-or-treater candy collection
       if (activeStep.subtractionCol) {
         const col = activeStep.subtractionCol;
         const val = opt.value ?? parseInt(opt.text, 10);
@@ -199,12 +198,11 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   };
 
-  // Continue to the next step or open level complete modal
+  // Continue to the next step or complete level
   const handleContinue = () => {
     if (currentStepIndex < activeLevel.steps.length - 1) {
       goToStep(currentLevelNumber, currentStepIndex + 1);
     } else {
-      // All steps of this level completed! Trigger celebratory modal!
       completeActiveLevel();
     }
   };
@@ -240,7 +238,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
       setLevelPointsEarned((p) => p + bonusTotal);
     }
 
-    // Show level completion popup
+    // Show level completion celebratory modal
     setIsModalOpen(true);
   };
 
@@ -261,10 +259,23 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     setIsModalOpen(false);
     setAnswers({ H: null, T: null, O: null });
     setCollectedCandies(0);
-    goToStep(currentLevelNumber, activeLevel.isStoryTutorial ? 1 : 0);
+    goToStep(currentLevelNumber, 0);
   };
 
-  // Switch level from progress bar
+  // Replay current step
+  const handleReplayStep = () => {
+    sounds.playPop();
+    setSelectedOption(null);
+    setIsCorrect(null);
+    setFeedback('');
+    setFlyingBag(null);
+    setAskingNotice(null);
+    if (activeStep.speechText) {
+      sounds.speak(activeStep.speechText);
+    }
+  };
+
+  // Switch level from progress bar (only unlocked levels)
   const handleSelectLevel = (lvlNum) => {
     if (unlockedLevels.includes(lvlNum) && lvlNum !== currentLevelNumber) {
       sounds.playPop();
@@ -277,7 +288,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   };
 
-  // Replay current level from progress bar
+  // Reset current level
   const handleResetLevel = () => {
     sounds.playPop();
     setIsModalOpen(false);
@@ -311,25 +322,27 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     setUsedHintThisLevel(true);
   };
 
-  // Determine active highlight for houses based on contextual anchor
-  const isHundredsActive =
-    activeStep.targetAnchor === 'hundreds_house' ||
-    activeStep.targetAnchor === 'hundreds_to_tens' ||
-    activeStep.targetAnchor === 'board_hundreds';
+  // Determine active house
+  const activeHouse = activeStep.activeHouse || 'ones';
+  const isHundredsActive = activeHouse === 'hundreds';
+  const isTensActive = activeHouse === 'tens';
+  const isOnesActive = activeHouse === 'ones';
 
-  const isTensActive =
-    activeStep.targetAnchor === 'tens_house' ||
-    activeStep.targetAnchor === 'hundreds_to_tens' ||
-    activeStep.targetAnchor === 'tens_to_ones' ||
-    activeStep.targetAnchor === 'board_tens';
-
-  const isOnesActive =
-    activeStep.targetAnchor === 'ones_house' ||
-    activeStep.targetAnchor === 'tens_to_ones' ||
-    activeStep.targetAnchor === 'board_ones';
+  // Highlight column on the subtraction board to visually connect with the active house
+  const boardHighlightCol =
+    activeStep.subtractionCol ||
+    (activeStep.bagAnimation?.from === 'hundreds' && activeStep.bagAnimation?.to === 'tens'
+      ? 'HT'
+      : activeStep.bagAnimation?.from === 'tens' && activeStep.bagAnimation?.to === 'ones'
+      ? 'TO'
+      : activeHouse === 'hundreds'
+      ? 'H'
+      : activeHouse === 'tens'
+      ? 'T'
+      : 'O');
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 py-2 flex flex-col gap-3 relative">
+    <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 py-2 flex flex-col gap-3 relative">
       {/* 5-Level Visual Progression Header with Animated Score */}
       <ProgressBar
         currentLevel={currentLevelNumber}
@@ -361,16 +374,8 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         </div>
       )}
 
-      {/* Spoken Character Dialogue Bubble */}
-      <DialogueBubble
-        speaker={activeStep.speaker}
-        dialogue={activeStep.dialogue}
-        speechText={activeStep.speechText}
-        badge={activeLevel.title}
-      />
-
-      {/* MAIN VISUAL STAGE: Living Haunted Houses & Candies */}
-      <div className="relative w-full bg-[#180a33]/90 border-3 border-purple-600/50 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-hidden">
+      {/* MAIN PLAY SCREEN: Interactive Haunted Houses Workspace */}
+      <div className="relative w-full bg-[#16092e]/90 border-3 border-purple-600/50 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-hidden">
         {/* Atmospheric Sky Elements */}
         <div className="absolute top-2 left-6 text-2xl sm:text-3xl select-none animate-pulse">🌕</div>
         <div className="absolute top-6 left-28 text-sm text-purple-300/40 select-none">✨</div>
@@ -387,45 +392,100 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
           />
         )}
 
-        {/* Three Living Haunted Houses */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 justify-items-center items-end max-w-2xl mx-auto my-1 z-10 relative">
+        {/* THREE LIVING HAUNTED HOUSES: THE INTERACTIVE WORKSPACE
+            Questions appear directly inside the house box whose place value is active.
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 items-start justify-items-center max-w-5xl mx-auto my-2 z-10 relative">
+          {/* Hundreds House */}
           <HauntedHouse
             type="hundreds"
-            value={houses.hundreds.display}
+            value={houses.hundreds.value ?? houses.hundreds.display}
             candies={houses.hundreds.candies}
             mood={houses.hundreds.mood}
             label={houses.hundreds.label}
             isActive={isHundredsActive}
             isGiving={activeStep.bagAnimation?.from === 'hundreds' && isCorrect}
+            isReceiving={activeStep.bagAnimation?.to === 'hundreds' && isCorrect}
+            dialogue={isHundredsActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.hundreds || "Hundreds House keeps 500 candies safe in vault.")}
+            speechText={isHundredsActive ? activeStep.speechText : activeStep.inactiveThoughts?.hundreds}
+            inactiveThought={activeStep.inactiveThoughts?.hundreds}
+            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'hundreds' ? askingNotice : null}
+            // In-house Question props
+            question={isHundredsActive ? activeStep.question : ''}
+            options={isHundredsActive ? activeStep.options : []}
+            selectedOption={isHundredsActive ? selectedOption : null}
+            isCorrect={isHundredsActive ? isCorrect : null}
+            feedback={isHundredsActive ? feedback : ''}
+            onSelectOption={isHundredsActive ? handleSelectOption : undefined}
+            onContinue={isHundredsActive ? handleContinue : undefined}
+            hint={isHundredsActive ? activeStep.hint : ''}
+            onShowHint={isHundredsActive ? handleShowHint : undefined}
+            floatingReward={isHundredsActive ? floatingReward : null}
+            onRewardEnd={() => setFloatingReward(null)}
           />
 
+          {/* Tens House */}
           <HauntedHouse
             type="tens"
-            value={houses.tens.display}
+            value={houses.tens.value ?? houses.tens.display}
             candies={houses.tens.candies}
             mood={houses.tens.mood}
             label={houses.tens.label}
             isActive={isTensActive}
-            isReceiving={activeStep.bagAnimation?.to === 'tens' && isCorrect}
             isGiving={activeStep.bagAnimation?.from === 'tens' && isCorrect}
+            isReceiving={activeStep.bagAnimation?.to === 'tens' && isCorrect}
+            dialogue={isTensActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.tens || "Tens House connects Hundreds and Ones.")}
+            speechText={isTensActive ? activeStep.speechText : activeStep.inactiveThoughts?.tens}
+            inactiveThought={activeStep.inactiveThoughts?.tens}
+            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'tens' ? askingNotice : null}
+            // In-house Question props
+            question={isTensActive ? activeStep.question : ''}
+            options={isTensActive ? activeStep.options : []}
+            selectedOption={isTensActive ? selectedOption : null}
+            isCorrect={isTensActive ? isCorrect : null}
+            feedback={isTensActive ? feedback : ''}
+            onSelectOption={isTensActive ? handleSelectOption : undefined}
+            onContinue={isTensActive ? handleContinue : undefined}
+            hint={isTensActive ? activeStep.hint : ''}
+            onShowHint={isTensActive ? handleShowHint : undefined}
+            floatingReward={isTensActive ? floatingReward : null}
+            onRewardEnd={() => setFloatingReward(null)}
           />
 
+          {/* Ones House */}
           <HauntedHouse
             type="ones"
-            value={houses.ones.display}
+            value={houses.ones.value ?? houses.ones.display}
             candies={houses.ones.candies}
             mood={houses.ones.mood}
             label={houses.ones.label}
             isActive={isOnesActive}
+            isGiving={activeStep.bagAnimation?.from === 'ones' && isCorrect}
             isReceiving={activeStep.bagAnimation?.to === 'ones' && isCorrect}
+            dialogue={isOnesActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.ones || "Ones House gives single candies to trick-or-treaters.")}
+            speechText={isOnesActive ? activeStep.speechText : activeStep.inactiveThoughts?.ones}
+            inactiveThought={activeStep.inactiveThoughts?.ones}
+            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'ones' ? askingNotice : null}
+            // In-house Question props
+            question={isOnesActive ? activeStep.question : ''}
+            options={isOnesActive ? activeStep.options : []}
+            selectedOption={isOnesActive ? selectedOption : null}
+            isCorrect={isOnesActive ? isCorrect : null}
+            feedback={isOnesActive ? feedback : ''}
+            onSelectOption={isOnesActive ? handleSelectOption : undefined}
+            onContinue={isOnesActive ? handleContinue : undefined}
+            hint={isOnesActive ? activeStep.hint : ''}
+            onShowHint={isOnesActive ? handleShowHint : undefined}
+            floatingReward={isOnesActive ? floatingReward : null}
+            onRewardEnd={() => setFloatingReward(null)}
           />
         </div>
 
-        {/* Cobblestone Street Ground Line */}
-        <div className="w-full h-2.5 bg-gradient-to-r from-amber-700 via-purple-900 to-amber-700 rounded-full my-2.5 border-t border-amber-400/50 shadow" />
+        {/* Cobblestone Street Ground Divider */}
+        <div className="w-full h-2.5 bg-gradient-to-r from-amber-700 via-purple-900 to-amber-700 rounded-full my-3 border-t border-amber-400/50 shadow" />
 
-        {/* Math Board & Trick-or-Treaters Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center mt-1">
+        {/* WRITTEN SUBTRACTION BOARD & TRICK-OR-TREATERS SECTION */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center mt-2">
           {/* Trick-or-Treaters with Candy Goal */}
           <TrickOrTreater
             collectedCandies={collectedCandies}
@@ -440,38 +500,14 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
             minuend={activeLevel.minuend}
             subtrahend={activeLevel.subtrahend}
             diff={activeLevel.diff}
-            highlightCol={
-              activeStep.subtractionCol || boardState.highlightCol || null
-            }
-            showResult={
-              activeStep.subtractionCol === 'H' && isCorrect
-            }
+            highlightCol={boardHighlightCol}
+            showResult={activeStep.subtractionCol === 'H' && isCorrect}
             answers={answers}
+            onShowHint={handleShowHint}
+            onReplayStep={handleReplayStep}
+            onRestartLevel={handleResetLevel}
           />
         </div>
-      </div>
-
-      {/* CONTEXTUAL QUESTION SECTION:
-          Appears immediately connected to the active operation/house/column
-      */}
-      <div ref={questionCardRef} className="w-full mt-1">
-        <ContextualQuestion
-          targetAnchor={activeStep.targetAnchor || 'ones_house'}
-          anchorTitle={activeStep.anchorTitle}
-          question={activeStep.question}
-          options={activeStep.options || []}
-          selectedOption={selectedOption}
-          isCorrect={isCorrect}
-          feedback={feedback}
-          onSelectOption={handleSelectOption}
-          onContinue={handleContinue}
-          isStartStep={activeStep.isStartStep}
-          onStartGame={handleStartGame}
-          hint={activeStep.hint}
-          onShowHint={handleShowHint}
-          floatingReward={floatingReward}
-          onRewardEnd={() => setFloatingReward(null)}
-        />
       </div>
 
       {/* Celebratory Level Completion & Grand Wizard Modal */}

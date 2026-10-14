@@ -37,6 +37,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "The Ones house is already empty! It needs to knock on its neighbor to the left.",
           },
+          {
+            id: 'D',
+            text: "The Trick-or-treaters 👻",
+            isCorrect: false,
+            feedback: "The trick-or-treaters came to collect candy, not give it! Ask your neighbor to the left.",
+          },
         ],
         hint: "Look right next door to the left of the Ones house — the Tens house!",
         askingAnimation: {
@@ -89,6 +95,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "Trick-or-treaters are here to collect candies, not give candies!",
           },
+          {
+            id: 'D',
+            text: "Search the dark graveyard 🪦",
+            isCorrect: false,
+            feedback: "There is no candy in the graveyard! The Hundreds house has 500 candies.",
+          },
         ],
         hint: "Move one place value further to the left — to the Hundreds house!",
         askingAnimation: {
@@ -140,6 +152,12 @@ export const LEVELS = [
             text: "1,000 candies 🍫",
             isCorrect: false,
             feedback: "1,000 candies is a thousand. One hundred equals exactly 100 candies!",
+          },
+          {
+            id: 'D',
+            text: "1 single candy 🍬",
+            isCorrect: false,
+            feedback: "Hundreds House only lends in whole hundreds: 1 hundred = 100 candies!",
           },
         ],
         hint: "1 hundred = 10 tens = 100 candies!",
@@ -199,6 +217,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "The Tens house only gives 1 ten (10 candies) to the Ones house!",
           },
+          {
+            id: 'D',
+            text: "0 candies 🎃",
+            isCorrect: false,
+            feedback: "Tens House must share 1 ten (10 candies) so Ones House can give candy to the kids!",
+          },
         ],
         hint: "The Tens house gives 1 ten, which is 10 candies (10 ones)!",
         bagAnimation: {
@@ -243,6 +267,7 @@ export const LEVELS = [
           { id: 'A', text: "7 candies 🍬", value: 7, isCorrect: true, feedback: "Superb! +100 points! 10 − 3 = 7 ones! ⭐" },
           { id: 'B', text: "6 candies 🍭", value: 6, isCorrect: false, feedback: "Count back 3 candies from 10: 9, 8, 7!" },
           { id: 'C', text: "8 candies 🍫", value: 8, isCorrect: false, feedback: "10 minus 3 leaves 7!" },
+          { id: 'D', text: "5 candies 🍬", value: 5, isCorrect: false, feedback: "10 − 3 = 7. Count back 3 from 10: 9, 8, 7!" },
         ],
         hint: "Count back 3 from 10: 9, 8, 7!",
         houses: {
@@ -276,6 +301,7 @@ export const LEVELS = [
           { id: 'A', text: "4 tens (40 candies) 🍬", value: 4, isCorrect: true, feedback: "Awesome! +100 points! 9 tens − 5 tens = 4 tens! 🎃" },
           { id: 'B', text: "3 tens 🍫", value: 3, isCorrect: false, feedback: "Count back 5 from 9: 9 − 5 = 4!" },
           { id: 'C', text: "5 tens 🍭", value: 5, isCorrect: false, feedback: "9 minus 5 is 4 tens!" },
+          { id: 'D', text: "6 tens 🍬", value: 6, isCorrect: false, feedback: "9 − 5 = 4. 9 tens minus 5 tens leaves 4 tens!" },
         ],
         hint: "9 tens minus 5 tens = 4 tens!",
         houses: {
@@ -309,6 +335,7 @@ export const LEVELS = [
           { id: 'A', text: "4 hundreds (400 candies) 🏰", value: 4, isCorrect: true, feedback: "Champion! +100 points! 4 − 0 = 4! 500 − 53 = 447! 🎉" },
           { id: 'B', text: "0 hundreds 👻", value: 0, isCorrect: false, feedback: "4 minus 0 leaves all 4 hundreds!" },
           { id: 'C', text: "5 hundreds 🏰", value: 5, isCorrect: false, feedback: "Hundreds lent 1 away, so 4 − 0 = 4!" },
+          { id: 'D', text: "3 hundreds 🏰", value: 3, isCorrect: false, feedback: "4 − 0 = 4! Hundreds house had 4 left and gave away 0." },
         ],
         hint: "Subtracting 0 means nothing was taken away: 4 − 0 = 4!",
         houses: {
@@ -367,6 +394,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "Place values exchange in base-10: 1 hundred = 10 tens = 100 candies!",
           },
+          {
+            id: 'D',
+            text: "400 candies 🏰",
+            isCorrect: false,
+            feedback: "Hundreds only lends 1 hundred (10 tens = 100 candies), not all 4 hundreds!",
+          },
         ],
         hint: "1 hundred is always equal to 10 tens (100 candies)!",
         bagAnimation: {
@@ -424,6 +457,12 @@ export const LEVELS = [
             text: "0 tens 😮",
             isCorrect: false,
             feedback: "It only gave 1 ten away. It keeps 9 tens!",
+          },
+          {
+            id: 'D',
+            text: "8 tens 🍭",
+            isCorrect: false,
+            feedback: "10 tens minus 1 ten leaves 9 tens!",
           },
         ],
         hint: "10 tens minus 1 ten given away = 9 tens!",
@@ -596,6 +635,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "It lent 1 away, so 3 − 1 = 2!",
           },
+          {
+            id: 'D',
+            text: "1 hundred 🏰",
+            isCorrect: false,
+            feedback: "3 hundreds minus 1 hundred leaves 2 hundreds!",
+          },
         ],
         hint: "3 minus 1 equals 2 hundreds remaining!",
         bagAnimation: {
@@ -653,6 +698,12 @@ export const LEVELS = [
             text: "1 ten 🍭",
             isCorrect: false,
             feedback: "It only gave 1 away, keeping 9 tens!",
+          },
+          {
+            id: 'D',
+            text: "0 tens 😮",
+            isCorrect: false,
+            feedback: "10 tens minus 1 ten leaves 9 tens!",
           },
         ],
         hint: "10 tens minus 1 ten = 9 tens!",
@@ -825,6 +876,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "It only shared 1 hundred, so 5 hundreds remain!",
           },
+          {
+            id: 'D',
+            text: "4 hundreds 🏰",
+            isCorrect: false,
+            feedback: "6 hundreds minus 1 hundred leaves 5 hundreds!",
+          },
         ],
         hint: "6 hundreds minus 1 hundred = 5 hundreds!",
         bagAnimation: {
@@ -882,6 +939,12 @@ export const LEVELS = [
             text: "5 Hundreds, 10 Tens, 0 Ones",
             isCorrect: false,
             feedback: "Tens gave 1 ten to Ones, so Tens is 9 and Ones is 10!",
+          },
+          {
+            id: 'D',
+            text: "4 Hundreds, 8 Tens, 10 Ones",
+            isCorrect: false,
+            feedback: "600 regroups to 5 Hundreds, 9 Tens, and 10 Ones!",
           },
         ],
         hint: "Remember the pattern across zeros: [Start − 1], [9], [10]!",
@@ -1054,6 +1117,12 @@ export const LEVELS = [
             isCorrect: false,
             feedback: "Hundreds always shares in whole hundreds = 100 candies!",
           },
+          {
+            id: 'D',
+            text: "700 candies (all of them!) 🏰",
+            isCorrect: false,
+            feedback: "Hundreds lends 1 hundred = 10 tens = 100 candies!",
+          },
         ],
         hint: "1 hundred = 10 tens = 100 candies!",
         bagAnimation: {
@@ -1111,6 +1180,12 @@ export const LEVELS = [
             text: "6 Hundreds, 10 Tens, 0 Ones",
             isCorrect: false,
             feedback: "Tens gave 1 ten to Ones, so Tens is 9 and Ones is 10!",
+          },
+          {
+            id: 'D',
+            text: "5 Hundreds, 8 Tens, 10 Ones",
+            isCorrect: false,
+            feedback: "700 regroups to 6 Hundreds, 9 Tens, and 10 Ones!",
           },
         ],
         hint: "Hundreds is 6, Tens is 9, Ones is 10!",

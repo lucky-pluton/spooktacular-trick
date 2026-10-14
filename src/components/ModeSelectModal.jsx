@@ -28,7 +28,7 @@ export default function ModeSelectModal({ isOpen = true, onSelectMode, onBackToW
         {/* Header Tag */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/80 border border-purple-400/50 text-amber-300 font-black text-xs uppercase tracking-wider mx-auto">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Choose Your Adventure</span>
+          <span>Module 1: Trick-or-Think</span>
         </div>
 
         {/* Modal Heading */}
@@ -36,11 +36,11 @@ export default function ModeSelectModal({ isOpen = true, onSelectMode, onBackToW
           id="mode-select-title"
           className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-purple-300 font-['Creepster',cursive] tracking-wide"
         >
-          How would you like to learn today?
+          Choose Your Trick-or-Think Mode
         </h2>
 
         <p className="text-xs sm:text-sm text-gray-300 font-medium max-w-md mx-auto -mt-2">
-          Select the mode that feels best for you. You can switch between them at any time!
+          Borrow, regroup, and help the houses share their candies! Select Game Mode or Notebook Mode:
         </p>
 
         {/* Two Equal Learning Modes Grid */}
@@ -136,7 +136,7 @@ export default function ModeSelectModal({ isOpen = true, onSelectMode, onBackToW
           </button>
         </div>
 
-        {/* Back to Welcome Link */}
+        {/* Back Link */}
         {onBackToWelcome && (
           <button
             onClick={() => {
@@ -146,7 +146,7 @@ export default function ModeSelectModal({ isOpen = true, onSelectMode, onBackToW
             type="button"
             className="text-xs text-purple-300 hover:text-amber-300 transition-colors underline cursor-pointer mt-1 self-center"
           >
-            ← Back to Welcome Exploration
+            ← Back to Module Selection
           </button>
         )}
       </div>

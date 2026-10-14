@@ -128,6 +128,45 @@ class SoundEngine {
     }
   }
 
+  playLanternJump() {
+    if (!this.soundEnabled) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      // Whimsical ghost hop whoosh with bright chime (F4 -> C5 -> A5)
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(349.23, t);
+      osc.frequency.exponentialRampToValueAtTime(880.00, t + 0.18);
+
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.24);
+
+      // Sparkle ping
+      const chime = this.ctx.createOscillator();
+      const chimeGain = this.ctx.createGain();
+      chime.type = 'triangle';
+      chime.frequency.setValueAtTime(1318.51, t + 0.08); // E6
+      chimeGain.gain.setValueAtTime(0.2, t + 0.08);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      chime.connect(chimeGain);
+      chimeGain.connect(this.ctx.destination);
+      chime.start(t + 0.08);
+      chime.stop(t + 0.36);
+    } catch (e) {
+      console.warn('Audio lantern jump error', e);
+    }
+  }
+
   playSuccess() {
     if (!this.soundEnabled) return;
     try {

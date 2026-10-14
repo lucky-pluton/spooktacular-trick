@@ -89,29 +89,43 @@ export default function Header({
             {/* Mode-Specific Identifier Badge */}
             {activeMode === 'game' && (
               <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/80 text-amber-300 text-[11px] font-black uppercase tracking-wider hidden sm:inline-flex items-center gap-1">
-                <span>🎮</span>
-                <span>Game Mode</span>
+                <span>🏰</span>
+                <span>Trick-or-Think • Game</span>
               </span>
             )}
 
             {activeMode === 'notebook' && (
               <span className="px-2.5 py-0.5 rounded-full bg-teal-400/20 border border-teal-400/80 text-teal-300 text-[11px] font-black uppercase tracking-wider hidden sm:inline-flex items-center gap-1">
                 <span>📓</span>
-                <span>Notebook Mode</span>
+                <span>Trick-or-Think • Notebook</span>
               </span>
             )}
 
-            {activeMode === 'mode_select' && (
+            {activeMode === 'trick_or_think_select' && (
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/60 text-amber-300 text-[11px] font-black uppercase tracking-wider hidden sm:inline-flex items-center gap-1">
+                <span>🏰</span>
+                <span>Trick-or-Think</span>
+              </span>
+            )}
+
+            {activeMode === 'math_o_lantern' && (
+              <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-400/80 text-teal-300 text-[11px] font-black uppercase tracking-wider hidden sm:inline-flex items-center gap-1 shadow-sm">
+                <span>🏮</span>
+                <span>Math O' Lantern</span>
+              </span>
+            )}
+
+            {activeMode === 'module_select' && (
               <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/60 text-purple-200 text-[11px] font-bold hidden sm:inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-400" />
-                <span>Choose Mode</span>
+                <span>Choose Module</span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Center: Small, Unobtrusive Way to Return to Main Menu */}
-        {(activeMode === 'game' || activeMode === 'notebook') && onReturnToMenu && (
+        {/* Center: Small, Unobtrusive Way to Return to Modules or Main Menu */}
+        {activeMode !== 'welcome' && onReturnToMenu && (
           <button
             onClick={() => {
               sounds.playPop();
@@ -119,10 +133,20 @@ export default function Header({
             }}
             type="button"
             className="px-3 py-1 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-gray-300 hover:text-white border border-purple-700/60 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102 active:scale-95"
-            title="Return to mode selection menu"
+            title={
+              activeMode === 'game' || activeMode === 'notebook'
+                ? 'Return to Trick-or-Think menu'
+                : 'Return to module selection'
+            }
           >
             <ArrowLeft className="w-3.5 h-3.5 text-amber-400" />
-            <span>Main Menu</span>
+            <span>
+              {activeMode === 'game' || activeMode === 'notebook'
+                ? 'Main Menu'
+                : activeMode === 'math_o_lantern' || activeMode === 'trick_or_think_select'
+                ? 'Modules'
+                : 'Welcome'}
+            </span>
           </button>
         )}
 
@@ -137,10 +161,12 @@ export default function Header({
               }}
               type="button"
               className="px-2.5 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800 text-purple-200 hover:text-white border border-purple-600/50 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer shadow"
-              title="Read Illustrated Story Comic"
+              title={activeMode === 'math_o_lantern' ? "Read Ghostie's Story" : "Read Illustrated Story Comic"}
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Story Comic</span>
+              <span className="hidden sm:inline">
+                {activeMode === 'math_o_lantern' ? "Ghostie's Story" : "Story Comic"}
+              </span>
             </button>
           )}
 

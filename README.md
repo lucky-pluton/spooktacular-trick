@@ -30,15 +30,42 @@ Two cute trick-or-treaters (Ghostie & Witchy) arrive needing **53 candies** (5 t
 
 ---
 
+## 🏰 Module 1: Trick-or-Think
+Subtitle: *"Borrow, regroup, and help the houses share their candies!"*
+
+Teaches traditional 3-digit subtraction through base-10 candy sharing, haunted-house place-value regrouping, and borrowing across zeros:
+- **Game Mode**: 5 progressive levels with level progression, points, candies, and 3-star ratings.
+- **Notebook Mode**: Math sandbox, 5 problems, and printable A4 math worksheets.
+- **Trick-or-Treat Candy Story**: Illustrated comic showing the candy borrowing process.
+
+---
+
+## 🏮 Module 2: Math O' Lantern
+Subtitle: *"Help Ghostie collect lanterns and discover the distance between numbers!"*
+
+Teaches subtraction through counting up, number jumps, and reaching friendly benchmark numbers (finding the distance between two numbers):
+- **Core Concept**: To solve $500 - 36$, Ghostie begins at $36$ and travels forward along the magical Lantern Trail to $500$:
+  - Jump 1: $36 \to 40$ ($+4$ lanterns)
+  - Jump 2: $40 \to 100$ ($+60$ lanterns)
+  - Jump 3: $100 \to 500$ ($+400$ lanterns)
+  - Total collected: $4 + 60 + 400 = 464$ lanterns! Therefore, $500 - 36 = 464$.
+- **Guided Journey**: Structured step-by-step sequence with Witchy's questions, randomized options, gentle hints, and celebration of the final difference.
+- **Lantern Sandbox**: Free exploratory jumping where children can choose custom benchmark targets (e.g. jumping to 50 first instead of 40), execute valid jumps, and see how all valid sequences sum to the exact difference!
+- **Five Subtraction Challenges**: Reusable for $500 - 53 = 447$, $400 - 65 = 335$, $300 - 28 = 272$, $600 - 84 = 516$, and $700 - 49 = 651$.
+- **Ghostie & Witchy's Story**: Illustrated storybook introducing the characters and method.
+
+---
+
 ## ✨ Features
 
-- 🎮 **Interactive Play Mode**: 5 sequential story-driven game scenes with interactive decisions, flying candy bags, and mathematical feedback.
-- 📖 **"Learn the Trick" Storybook Comic**: Self-paced illustrated comic story for relaxed reading without test anxiety.
-- 🧪 **Math Practice Sandbox**: Try out other 3-digit subtraction across zeros (e.g. 400 − 65, 300 − 28, 600 − 84).
-- 🔊 **Pure Web Audio API Sound Effects**: Spooky night breeze, magical candy borrowing twinkles, candy bag drops, and cheering victory fanfare (100% offline).
-- 🗣️ **Voice Narration**: Built-in Web Speech API voice synthesis with toggle for young learners.
-- 🖨️ **Printable Worksheet**: Formatted for `@media print` so teachers and parents can print out paper math worksheets.
-- 🔗 **Share Game**: Built-in Web Share API with 1-click clipboard copy fallback and social preview tags.
+- 🎃 **Two Distinct Modules**: Module selection screen cleanly separating Trick-or-Think and Math O' Lantern.
+- 🎮 **Interactive Play Mode**: Story-driven game scenes with interactive decisions and mathematical feedback.
+- 📖 **Illustrated Storybooks**: Comics and story modals for both learning methods.
+- 🧪 **Lantern Sandbox & Math Sandbox**: Multiple valid jumping paths and practice problems.
+- 🔊 **Pure Web Audio API Sound Effects**: Magical lantern hop whooshes, chime pings, and victory fanfares (100% offline).
+- 🗣️ **Voice Narration**: Web Speech API voice synthesis with toggle for young learners.
+- 🖨️ **Printable Worksheet**: Formatted for `@media print` paper math worksheets.
+- 🔗 **Share Game**: Built-in Web Share API with 1-click clipboard copy fallback.
 
 ---
 

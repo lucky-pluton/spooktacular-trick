@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import Header from './components/Header';
 import WelcomeScreen from './components/WelcomeScreen';
+import ModuleSelectScreen from './components/ModuleSelectScreen';
 import ModeSelectModal from './components/ModeSelectModal';
 import ComicStoryModal from './components/ComicStoryModal';
 import GamePage from './components/GamePage';
 import NotebookMode from './components/NotebookMode';
+import MathOLanternModule from './components/MathOLantern/MathOLanternModule';
+import MathOLanternStoryModal from './components/MathOLantern/MathOLanternStoryModal';
 import ConnectedNeighbourhood from './components/ConnectedNeighbourhood';
 import PrintableWorksheet from './components/PrintableWorksheet';
 import { LEVELS } from './data/gameScenes';
@@ -12,31 +15,33 @@ import { Heart } from 'lucide-react';
 
 /**
  * App Root Component
- * Enforces strict UI separation between Game Mode and Notebook Mode:
+ * Multi-Module Halloween Subtraction Learning Application
  * 
  * 1. Screen 1: 'welcome'
- *    - Friendly introduction banner with "Let's Start!" button.
- *    - Complete connected neighbourhood visible in normal, idle state.
- *    - Does NOT start the game, deduct points, or show question popups automatically.
+ *    - Introduces the overall application with a prominent "Let's Start!" button.
+ *    - Full connected neighbourhood visible in normal, idle state.
  * 
- * 2. Screen 2: 'mode_select'
- *    - Prompts child: "How would you like to learn today?"
- *    - Option A: Game Mode (5 levels, rewards, celebrations).
- *    - Option B: Notebook Mode (Maths sandbox, 5 problems, printable worksheet).
+ * 2. Screen 2: 'module_select'
+ *    - Clear module-selection screen:
+ *      • Module 1: Trick-or-Think ("Borrow, regroup, and help the houses share their candies!")
+ *      • Module 2: Math O' Lantern ("Help Ghostie collect lanterns and discover the distance between numbers!")
  * 
- * 3. Screen 3A: 'game' (Dedicated Game Mode Interface)
- *    - Only game-related controls (Level progress, Score & Stars, Subtraction board).
- *    - Small, unobtrusive "← Main Menu" button in header to return when desired.
- *    - ZERO Notebook Mode tabs, sandbox controls, or printing options.
+ * 3. Module 1: Trick-or-Think
+ *    - Screen 'trick_or_think_select': Game Mode vs Notebook Mode choice.
+ *    - Screen 'game': Dedicated Game Mode interface (place-value borrowing, scores, levels).
+ *    - Screen 'notebook': Dedicated Notebook Mode interface (5 problems, print worksheet).
  * 
- * 4. Screen 3B: 'notebook' (Dedicated Notebook Mode Interface)
- *    - Only notebook-related controls (5 problems selector, step stepper, Print Worksheet).
- *    - Small, unobtrusive "← Main Menu" button in header to return when desired.
- *    - ZERO Game Mode tabs, points, scores, stars, or level-unlock restrictions.
+ * 4. Module 2: Math O' Lantern
+ *    - Screen 'math_o_lantern': Counting up number jumps, Guided Journey & Lantern Sandbox.
+ * 
+ * Enforces strict separation: No controls or mode tabs from one module leak into the other.
  */
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('welcome'); // 'welcome' | 'mode_select' | 'game' | 'notebook'
-  const [isStoryOpen, setIsStoryOpen] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState('welcome');
+  // 'welcome' | 'module_select' | 'trick_or_think_select' | 'game' | 'notebook' | 'math_o_lantern'
+
+  const [isStoryOpen, setIsStoryOpen] = useState(false); // Trick-or-Think candy borrowing comic
+  const [isMathStoryOpen, setIsMathStoryOpen] = useState(false); // Math O' Lantern counting-up story
 
   // Idle houses state for the welcome screen exploration
   const idleHouses = LEVELS[0]?.steps?.[0]?.houses || {
@@ -54,23 +59,33 @@ export default function App() {
       <Header
         activeMode={currentScreen}
         onReturnToMenu={() => {
-          if (currentScreen === 'mode_select') {
+          if (currentScreen === 'game' || currentScreen === 'notebook') {
+            setCurrentScreen('trick_or_think_select');
+          } else if (currentScreen === 'trick_or_think_select' || currentScreen === 'math_o_lantern') {
+            setCurrentScreen('module_select');
+          } else if (currentScreen === 'module_select') {
             setCurrentScreen('welcome');
           } else {
-            setCurrentScreen('mode_select');
+            setCurrentScreen('welcome');
           }
         }}
-        onOpenStory={() => setIsStoryOpen(true)}
+        onOpenStory={() => {
+          if (currentScreen === 'math_o_lantern') {
+            setIsMathStoryOpen(true);
+          } else {
+            setIsStoryOpen(true);
+          }
+        }}
       />
 
-      {/* Main Content Area: Strictly renders only the selected mode */}
+      {/* Main Content Area: Strictly renders only the selected module/screen */}
       <main className="flex-1 w-full flex flex-col justify-center py-2 sm:py-4">
         {/* 1. WELCOME & EXPLORATION SCREEN */}
         {currentScreen === 'welcome' && (
           <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 flex flex-col gap-3">
             {/* Welcoming Banner with Prominent "Let's Start!" Button */}
             <WelcomeScreen
-              onStart={() => setCurrentScreen('mode_select')}
+              onStart={() => setCurrentScreen('module_select')}
               onOpenStory={() => setIsStoryOpen(true)}
             />
 
@@ -89,13 +104,27 @@ export default function App() {
           </div>
         )}
 
-        {/* 2. MODE SELECTION SCREEN */}
-        {currentScreen === 'mode_select' && (
+        {/* 2. MODULE SELECTION SCREEN */}
+        {currentScreen === 'module_select' && (
+          <ModuleSelectScreen
+            onSelectModule={(mod) => {
+              if (mod === 'trick_or_think') {
+                setCurrentScreen('trick_or_think_select');
+              } else if (mod === 'math_o_lantern') {
+                setCurrentScreen('math_o_lantern');
+              }
+            }}
+            onBackToWelcome={() => setCurrentScreen('welcome')}
+          />
+        )}
+
+        {/* 3. TRICK-OR-THINK: MODE SELECTION (Game Mode vs Notebook Mode) */}
+        {currentScreen === 'trick_or_think_select' && (
           <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 flex flex-col gap-4">
             <ModeSelectModal
               isOpen={true}
               onSelectMode={(mode) => setCurrentScreen(mode)}
-              onBackToWelcome={() => setCurrentScreen('welcome')}
+              onBackToWelcome={() => setCurrentScreen('module_select')}
             />
 
             {/* Ambient Background Houses */}
@@ -110,32 +139,45 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. DEDICATED GAME MODE INTERFACE */}
+        {/* 4. TRICK-OR-THINK: DEDICATED GAME MODE INTERFACE */}
         {currentScreen === 'game' && (
           <GamePage
             onOpenStory={() => setIsStoryOpen(true)}
-            onReturnToMenu={() => setCurrentScreen('mode_select')}
+            onReturnToMenu={() => setCurrentScreen('trick_or_think_select')}
           />
         )}
 
-        {/* 4. DEDICATED NOTEBOOK MODE INTERFACE */}
+        {/* 5. TRICK-OR-THINK: DEDICATED NOTEBOOK MODE INTERFACE */}
         {currentScreen === 'notebook' && (
           <NotebookMode
             onOpenStory={() => setIsStoryOpen(true)}
           />
         )}
+
+        {/* 6. MATH O' LANTERN: DEDICATED COUNTING UP MODULE */}
+        {currentScreen === 'math_o_lantern' && (
+          <MathOLanternModule
+            onReturnToModules={() => setCurrentScreen('module_select')}
+          />
+        )}
       </main>
 
-      {/* STORY COMIC MODAL (Accessible on request without losing active state) */}
+      {/* TRICK-OR-THINK STORY COMIC MODAL */}
       <ComicStoryModal
         isOpen={isStoryOpen}
         onClose={() => setIsStoryOpen(false)}
       />
 
+      {/* MATH O' LANTERN STORY MODAL */}
+      <MathOLanternStoryModal
+        isOpen={isMathStoryOpen}
+        onClose={() => setIsMathStoryOpen(false)}
+      />
+
       {/* PRINTABLE WORKSHEET VIEW (Visible Only When Printing from Notebook Mode) */}
       {currentScreen === 'notebook' && <PrintableWorksheet />}
 
-      {/* Footer */}
+      {/* Shared Application Footer */}
       <footer className="w-full bg-[#0a0314] border-t border-purple-900/60 py-3 px-4 text-center text-xs text-gray-400 print:hidden">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 font-medium">
@@ -145,9 +187,9 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3 font-semibold text-purple-300">
-            <span>500 − 53 = 447</span>
+            <span>Module 1: Trick-or-Think (Regrouping)</span>
             <span>•</span>
-            <span>Base-10 Candy Regrouping</span>
+            <span>Module 2: Math O' Lantern (Counting Up)</span>
           </div>
         </div>
       </footer>

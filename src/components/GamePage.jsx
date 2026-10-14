@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ConnectedNeighbourhood from './ConnectedNeighbourhood';
+import QuestionSidePanel from './QuestionSidePanel';
 import TrickOrTreater from './TrickOrTreater';
 import PlaceValueBoard from './PlaceValueBoard';
 import ProgressBar from './ProgressBar';
@@ -424,60 +425,72 @@ export default function GamePage({ onOpenStory, onReturnToMenu }) {
         </div>
       )}
 
-      {/* ONE CONNECTED HAUNTED-HOUSE NEIGHBOURHOOD
-          The houses live together on a shared cobblestone street.
-          Questions appear automatically in cloud-shaped speech bubbles near the active house!
+      {/* MAIN GAMEPLAY WORKSPACE:
+          Houses on the Left (~65%), Interactive Question Panel on the Right (~35%).
+          Both the haunted houses and question are simultaneously visible on the screen!
       */}
-      <ConnectedNeighbourhood
-        houses={houses}
-        activeHouse={activeHouse}
-        isQuestionVisible={isQuestionVisible}
-        question={activeStep.question}
-        speechText={activeStep.speechText}
-        dialogue={activeStep.dialogue}
-        options={shuffledOptions}
-        selectedOption={selectedOption}
-        isCorrect={isCorrect}
-        feedback={feedback}
-        onSelectOption={handleSelectOption}
-        onContinue={handleContinue}
-        hint={activeStep.hint}
-        onShowHint={handleShowHint}
-        hintVisible={hintVisible}
-        stepNumber={currentStepIndex + 1}
-        totalSteps={activeLevel.steps.length}
-        flyingBag={flyingBag}
-        askingNotice={askingNotice}
-        floatingReward={floatingReward}
-        onRewardEnd={() => setFloatingReward(null)}
-        isIdleMode={false}
-      />
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start my-1">
+        {/* LEFT COLUMN: ~65% width (lg:col-span-7 xl:col-span-8) */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3">
+          {/* Living Connected Haunted-House Neighbourhood */}
+          <ConnectedNeighbourhood
+            houses={houses}
+            activeHouse={activeHouse}
+            isQuestionVisible={isQuestionVisible}
+            isCorrect={isCorrect}
+            flyingBag={flyingBag}
+            askingNotice={askingNotice}
+            floatingReward={floatingReward}
+            onRewardEnd={() => setFloatingReward(null)}
+            isIdleMode={false}
+          />
 
-      {/* PERSISTENT WRITTEN SUBTRACTION BOARD & TRICK-OR-TREATERS
-          Directly below the houses, showing the classroom borrowing algorithm in real time.
-      */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center shrink-0">
-        {/* Trick-or-Treaters with Candy Goal */}
-        <TrickOrTreater
-          collectedCandies={collectedCandies}
-          targetCandies={activeLevel.subtrahend}
-          isCollecting={activeStep.subtractionCol !== undefined}
-          isCelebrated={collectedCandies === activeLevel.subtrahend}
-        />
+          {/* Persistent Written Subtraction Board & Trick-or-Treaters beneath houses */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center justify-center">
+            {/* Trick-or-Treaters with Candy Goal */}
+            <TrickOrTreater
+              collectedCandies={collectedCandies}
+              targetCandies={activeLevel.subtrahend}
+              isCollecting={activeStep.subtractionCol !== undefined}
+              isCelebrated={collectedCandies === activeLevel.subtrahend}
+            />
 
-        {/* Persistent Written Subtraction Board */}
-        <PlaceValueBoard
-          boardState={boardState}
-          minuend={activeLevel.minuend}
-          subtrahend={activeLevel.subtrahend}
-          diff={activeLevel.diff}
-          highlightCol={boardHighlightCol}
-          showResult={activeStep.subtractionCol === 'H' && isCorrect}
-          answers={answers}
-          onShowHint={handleShowHint}
-          onReplayStep={handleReplayStep}
-          onRestartLevel={handleResetLevel}
-        />
+            {/* Persistent Written Subtraction Board */}
+            <PlaceValueBoard
+              boardState={boardState}
+              minuend={activeLevel.minuend}
+              subtrahend={activeLevel.subtrahend}
+              diff={activeLevel.diff}
+              highlightCol={boardHighlightCol}
+              showResult={activeStep.subtractionCol === 'H' && isCorrect}
+              answers={answers}
+              onShowHint={handleShowHint}
+              onReplayStep={handleReplayStep}
+              onRestartLevel={handleResetLevel}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: ~35% width (lg:col-span-5 xl:col-span-4) - Interactive Question Panel */}
+        <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-3 lg:sticky lg:top-14">
+          <QuestionSidePanel
+            activeHouse={activeHouse}
+            question={activeStep.question}
+            speechText={activeStep.speechText}
+            dialogue={activeStep.dialogue}
+            options={shuffledOptions}
+            selectedOption={selectedOption}
+            isCorrect={isCorrect}
+            feedback={feedback}
+            onSelectOption={handleSelectOption}
+            onContinue={handleContinue}
+            hint={activeStep.hint}
+            onShowHint={handleShowHint}
+            hintVisible={hintVisible}
+            stepNumber={currentStepIndex + 1}
+            totalSteps={activeLevel.steps.length}
+          />
+        </div>
       </div>
 
       {/* CELEBRATORY LEVEL COMPLETION & GRAND WIZARD MODAL */}

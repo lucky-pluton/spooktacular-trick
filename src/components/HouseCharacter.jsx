@@ -190,16 +190,16 @@ export default function HouseCharacter({
       {/* Active State / Giving / Receiving Badges */}
       <div className="h-6 flex items-center justify-center mb-1">
         {isActive && isThinking ? (
-          <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-black font-black text-[11px] uppercase tracking-wider shadow-[0_0_15px_rgba(255,180,0,0.8)] animate-pulse">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Thinking...</span>
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 text-black font-black text-[10px] sm:text-[11px] uppercase tracking-wider shadow-[0_0_15px_rgba(255,180,0,0.85)] animate-pulse">
+            <Sparkles className="w-3 h-3" />
+            <span>Active ➡️</span>
           </span>
         ) : isGiving ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-black font-black text-[10px] uppercase animate-bounce shadow">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400 text-black font-black text-[10px] uppercase animate-bounce shadow">
             Giving 🍬
           </span>
         ) : isReceiving ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400 text-black font-black text-[10px] uppercase animate-bounce shadow">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-400 text-black font-black text-[10px] uppercase animate-bounce shadow">
             Received ✨
           </span>
         ) : null}
@@ -207,7 +207,7 @@ export default function HouseCharacter({
 
       {/* SVG LIVING HAUNTED HOUSE ARCHITECTURE */}
       <div
-        className={`relative w-44 sm:w-56 md:w-64 lg:w-72 h-44 sm:h-52 md:h-60 transition-all duration-300 ${
+        className={`relative w-28 sm:w-36 md:w-44 lg:w-48 xl:w-52 h-32 sm:h-40 md:h-48 lg:h-52 transition-all duration-300 ${
           isActive ? config.aura : 'filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.7)]'
         }`}
       >
@@ -286,12 +286,12 @@ export default function HouseCharacter({
           Stands on the shared ground right in front of the house.
       */}
       <div
-        className={`w-full max-w-[220px] sm:max-w-[240px] mt-1 p-2 rounded-2xl border-2 ${config.signBorder} ${config.signBg} shadow-lg backdrop-blur-md flex items-center justify-between gap-2 transition-all`}
+        className={`w-full max-w-[130px] sm:max-w-[180px] md:max-w-[220px] mt-1 p-1 sm:p-2 rounded-xl sm:rounded-2xl border-2 ${config.signBorder} ${config.signBg} shadow-lg backdrop-blur-md flex items-center justify-between gap-1 sm:gap-2 transition-all`}
       >
         {/* Large Prominent Digit Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0">
           <div
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl border-2 border-white shadow-md transition-transform"
+            className="w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center font-black text-sm sm:text-lg md:text-2xl border-2 border-white shadow-md transition-transform shrink-0"
             style={{
               backgroundColor: config.badgeBg,
               color: '#ffffff',
@@ -300,24 +300,24 @@ export default function HouseCharacter({
           >
             {value}
           </div>
-          <div className="flex flex-col text-left">
-            <span className="text-[10px] uppercase tracking-wider text-gray-300 font-extrabold leading-none">
+          <div className="flex flex-col text-left min-w-0">
+            <span className="text-[8px] sm:text-[10px] uppercase tracking-wider text-gray-300 font-extrabold leading-none truncate">
               {config.shortName}
             </span>
-            <span className="text-xs font-black text-white leading-tight">
+            <span className="text-[10px] sm:text-xs font-black text-white leading-tight truncate">
               {label || `${value} ${type === 'hundreds' ? 'Hundreds' : type === 'tens' ? 'Tens' : 'Ones'}`}
             </span>
           </div>
         </div>
 
         {/* Candy Bowl Supply Counter */}
-        <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-xl border border-white/10 text-right">
-          <span className="text-sm sm:text-base">🍬</span>
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-black/50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg sm:rounded-xl border border-white/10 text-right shrink-0">
+          <span className="text-xs sm:text-sm md:text-base">🍬</span>
           <div className="flex flex-col">
-            <span className="font-black text-amber-300 text-xs sm:text-sm leading-none">
+            <span className="font-black text-amber-300 text-[11px] sm:text-xs md:text-sm leading-none">
               {candies}
             </span>
-            <span className="text-[8px] text-purple-200 font-semibold leading-none">
+            <span className="text-[7px] sm:text-[8px] text-purple-200 font-semibold leading-none hidden sm:inline">
               candies
             </span>
           </div>
@@ -327,7 +327,7 @@ export default function HouseCharacter({
         <button
           onClick={handleSpeak}
           type="button"
-          className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 transition-colors cursor-pointer"
+          className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 transition-colors cursor-pointer hidden sm:block shrink-0"
           title={`Listen to ${config.name}`}
           aria-label={`Listen to ${config.name}`}
         >

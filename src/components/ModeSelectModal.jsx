@@ -14,7 +14,7 @@ import { sounds } from '../audio/soundEffects';
  * "Explore subtraction at your own pace, like working in your maths notebook!"
  * (Interactive maths notebook / sandbox, no points pressure, print worksheet)
  */
-export default function ModeSelectModal({ isOpen = true, onSelectMode }) {
+export default function ModeSelectModal({ isOpen = true, onSelectMode, onBackToWelcome }) {
   if (!isOpen) return null;
 
   return (
@@ -135,6 +135,20 @@ export default function ModeSelectModal({ isOpen = true, onSelectMode }) {
             </div>
           </button>
         </div>
+
+        {/* Back to Welcome Link */}
+        {onBackToWelcome && (
+          <button
+            onClick={() => {
+              sounds.playPop();
+              onBackToWelcome();
+            }}
+            type="button"
+            className="text-xs text-purple-300 hover:text-amber-300 transition-colors underline cursor-pointer mt-1 self-center"
+          >
+            ← Back to Welcome Exploration
+          </button>
+        )}
       </div>
     </div>
   );

@@ -24,7 +24,6 @@ export default function ProgressBar({
   onResetLevel,
   onRestartGame,
   onShowHint,
-  onSwitchMode,
 }) {
   const levelConfigs = [
     { num: 1, label: 'L1', math: '500 − 53', icon: '🎃' },
@@ -168,17 +167,6 @@ export default function ProgressBar({
               title="Restart from Level 1"
             >
               Restart
-            </button>
-          )}
-
-          {onSwitchMode && (
-            <button
-              onClick={onSwitchMode}
-              type="button"
-              className="p-1.5 sm:px-2.5 sm:py-1 rounded-xl bg-teal-950/70 hover:bg-teal-900 text-teal-300 border border-teal-500/50 text-[11px] font-bold transition-all cursor-pointer active:scale-95 hidden sm:flex items-center gap-1"
-              title="Switch to Notebook Mode"
-            >
-              <span>📓 Notebook</span>
             </button>
           )}
         </div>

@@ -36,7 +36,7 @@ export default function LevelCompleteModal({
   onReview,
   onPlayAgain,
   onOpenStory,
-  onOpenPractice,
+  onReturnToMenu,
   completedLevels = [1],
 }) {
   const [copied, setCopied] = useState(false);
@@ -264,13 +264,16 @@ export default function LevelCompleteModal({
                 <span>Review Story Comic</span>
               </button>
 
-              {onOpenPractice && (
+              {onReturnToMenu && (
                 <button
-                  onClick={onOpenPractice}
+                  onClick={() => {
+                    sounds.playPop();
+                    onReturnToMenu();
+                  }}
                   type="button"
-                  className="py-2.5 px-4 rounded-xl bg-teal-950/80 hover:bg-teal-900 text-teal-200 border border-teal-500/50 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  className="py-2.5 px-4 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-500/50 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>🧪 Try Sandbox</span>
+                  <span>🏠 Main Menu</span>
                 </button>
               )}
             </div>

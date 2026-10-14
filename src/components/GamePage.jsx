@@ -42,7 +42,7 @@ function shuffleOptions(options) {
  *    500−53=447, 400−65=335, 300−28=272, 600−84=516, 700−49=651.
  * 6. Points & Celebratory Level Completion Modals.
  */
-export default function GamePage({ onOpenStory, onOpenPractice, onSwitchMode }) {
+export default function GamePage({ onOpenStory, onReturnToMenu }) {
   // Level progression (5 compulsory sequential levels)
   const [currentLevelNumber, setCurrentLevelNumber] = useState(1);
   const [unlockedLevels, setUnlockedLevels] = useState([1]);
@@ -406,7 +406,6 @@ export default function GamePage({ onOpenStory, onOpenPractice, onSwitchMode }) 
         onResetLevel={handleResetLevel}
         onRestartGame={handleRestartGame}
         onShowHint={handleShowHint}
-        onSwitchMode={onSwitchMode}
       />
 
       {/* Pop-up Hint Bar if requested */}
@@ -497,7 +496,7 @@ export default function GamePage({ onOpenStory, onOpenPractice, onSwitchMode }) 
         onReview={handleLevelCompleteModalReview}
         onPlayAgain={handleRestartGame}
         onOpenStory={onOpenStory}
-        onOpenPractice={onOpenPractice}
+        onReturnToMenu={onReturnToMenu}
         completedLevels={completedLevels}
       />
     </div>

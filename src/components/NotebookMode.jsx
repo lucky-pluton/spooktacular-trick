@@ -35,7 +35,7 @@ function shuffleOptions(options) {
  * 4. Step through calculation at child's own pace (Previous, Next, Replay).
  * 5. Prominent "🖨️ Print Maths Worksheet" button!
  */
-export default function NotebookMode({ onSwitchToGame, onOpenStory }) {
+export default function NotebookMode({ onOpenStory }) {
   // Problem selection (1 to 5)
   const [selectedProblemIndex, setSelectedProblemIndex] = useState(0);
   const activeLevel = LEVELS[selectedProblemIndex] || LEVELS[0];
@@ -325,21 +325,6 @@ export default function NotebookMode({ onSwitchToGame, onOpenStory }) {
             <Printer className="w-4 h-4" />
             <span>Print Worksheet</span>
           </button>
-
-          {/* Optional Switch to Game Mode */}
-          {onSwitchToGame && (
-            <button
-              onClick={() => {
-                sounds.playPop();
-                onSwitchToGame();
-              }}
-              type="button"
-              className="px-3 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-600/50 text-xs font-bold transition-all cursor-pointer hidden md:flex items-center gap-1"
-              title="Play Game Mode"
-            >
-              <span>Play Game 🎮</span>
-            </button>
-          )}
 
           {/* Optional Story Comic */}
           {onOpenStory && (

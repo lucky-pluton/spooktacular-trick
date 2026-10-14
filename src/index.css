@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --font-heading: 'Creepster', cursive;
+    --font-story: 'Patrick Hand', cursive;
+    --font-ui: 'Fredoka', 'Outfit', sans-serif;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #0e051d;
+    color: #ffffff;
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Spooky Glow & Pulse Animations */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes spookyPulse {
+  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 8px rgba(255, 160, 0, 0.4)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 18px rgba(255, 160, 0, 0.85)); }
+}
+
+.animate-float {
+  animation: floatSlow 3.5s ease-in-out infinite;
+}
+
+.glow-spooky {
+  animation: spookyPulse 2.8s ease-in-out infinite;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #110726;
+}
+::-webkit-scrollbar-thumb {
+  background: #4a154b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7b2cbf;
+}
+
+/* Print Optimization */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, CheckCircle2, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { PRACTICE_PROBLEMS } from '../data/gameScenes';
 import { sounds } from '../audio/soundEffects';
 
@@ -19,9 +19,6 @@ export default function PracticeMode({ onBackToStory }) {
   const [checked, setChecked] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const correctOnes = (10 - (problem.subtrahend % 10)) % 10;
-  const correctTens = 9 - Math.floor((problem.subtrahend % 100) / 10);
-  const correctHundreds = Math.floor(problem.minuend / 100) - 1;
 
   const handleCheck = (e) => {
     e.preventDefault();

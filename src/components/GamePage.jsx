@@ -7,61 +7,86 @@ import PlaceValueBoard from './PlaceValueBoard';
 import ProgressBar from './ProgressBar';
 import AnswerPanel from './AnswerPanel';
 import GameSummary from './GameSummary';
-import { SCENES } from '../data/gameScenes';
+import { LEVELS } from '../data/gameScenes';
 import { sounds } from '../audio/soundEffects';
 
 /**
  * GamePage Component
- * Main state orchestrator for the 5 interactive scenes of Spooktacular Trick.
+ * Main orchestrator for the 5 mandatory game levels of Spooktacular Trick.
+ * Implements:
+ * - Two-column responsive desktop layout (60-65% visual learning area on left, 35-40% sticky MCQ on right)
+ * - Mandatory sequential 5-level progression (Level 1 unlocked, 2-5 locked until preceding is complete)
+ * - Dynamic place-value working and 2-stage animated candy borrowing for every level
+ * - Step-by-step educational column subtraction for Ones, Tens, and Hundreds
+ * - Level complete state with seamless progression
+ * - Celebratory victory screen after Level 5
  */
 export default function GamePage({ onOpenStory, onOpenPractice }) {
-  // Game progression state
-  const [currentSceneId, setCurrentSceneId] = useState(1);
+  // Level progression state
+  const [currentLevelNumber, setCurrentLevelNumber] = useState(1);
+  const [unlockedLevels, setUnlockedLevels] = useState([1]);
+  const [completedLevels, setCompletedLevels] = useState([]);
+  const [isVictory, setIsVictory] = useState(false);
+
+  // Active level data
+  const currentLevelIndex = currentLevelNumber - 1;
+  const activeLevel = LEVELS[currentLevelIndex] || LEVELS[0];
+
+  // Step state within the active level
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const activeStep = activeLevel.steps[currentStepIndex] || activeLevel.steps[0];
+
+  // Visual scene state
+  const [houses, setHouses] = useState(activeStep.houses);
+  const [boardState, setBoardState] = useState(activeStep.boardState);
+  const [flyingBag, setFlyingBag] = useState(null);
+
+  // Scoring and assistance
   const [score, setScore] = useState(100);
   const [stars, setStars] = useState(3);
   const [hintVisible, setHintVisible] = useState(false);
 
-  // Question & Interaction state
+  // Question & MCQ interaction state
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [feedback, setFeedback] = useState('');
 
-  // Scene 5 Subtraction step state
+  // Column subtraction phase state (within subtraction step)
   const [subtractionStep, setSubtractionStep] = useState(0); // 0: Ones, 1: Tens, 2: Hundreds
   const [answers, setAnswers] = useState({ H: null, T: null, O: null });
-
-  // Candies collected by trick-or-treaters
   const [collectedCandies, setCollectedCandies] = useState(0);
 
-  // Flying candy bag animation state
-  const [flyingBag, setFlyingBag] = useState(null);
+  // Level complete banner inside right-hand panel
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
 
-  // Scene configuration
-  const currentScene = SCENES.find((s) => s.id === currentSceneId) || SCENES[0];
-  const [houses, setHouses] = useState(currentScene.houses);
-  const [boardState, setBoardState] = useState(currentScene.boardState);
-
-  // Sync scene state when scene ID changes
+  // Sync state whenever level or step changes
   useEffect(() => {
-    setHouses(currentScene.houses);
-    setBoardState(currentScene.boardState);
+    setHouses(activeStep.houses);
+    setBoardState(activeStep.boardState);
     setSelectedOption(null);
     setIsCorrect(null);
     setFeedback('');
     setHintVisible(false);
+    setFlyingBag(null);
 
-    // Speak dialogue when scene loads
-    if (currentScene.speechText) {
-      sounds.speak(currentScene.speechText);
+    if (activeStep.isSubtractionPhase) {
+      setSubtractionStep(0);
+      setAnswers({ H: null, T: null, O: null });
+      setCollectedCandies(0);
     }
-  }, [currentSceneId]);
 
-  // Handle Start Game from Scene 1
+    // Voice narration
+    if (activeStep.speechText) {
+      sounds.speak(activeStep.speechText);
+    }
+  }, [currentLevelNumber, currentStepIndex]);
+
+  // Handle "Start Level / Start the Trick!" for steps with isStartStep
   const handleStartGame = () => {
-    setCurrentSceneId(2);
+    setCurrentStepIndex(1);
   };
 
-  // Handle Option Selection for Scenes 2, 3, 4
+  // Handle multiple-choice option selection
   const handleSelectOption = (opt) => {
     setSelectedOption(opt.id);
 
@@ -70,47 +95,23 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
       setFeedback(opt.feedback);
       sounds.playSuccess();
 
-      // Trigger scene specific transformation animation
-      if (currentSceneId === 3) {
-        // Hundreds give 100 to Tens
+      // Trigger animated candy bag borrowing transfer if specified
+      if (activeStep.bagAnimation) {
+        const bag = activeStep.bagAnimation;
         setFlyingBag({
-          type: '100',
-          from: 'hundreds',
-          to: 'tens',
-          label: '100 Candies',
+          type: bag.type,
+          from: bag.from,
+          to: bag.to,
+          label: bag.label,
         });
         sounds.playCandyBorrow();
 
         setTimeout(() => {
           sounds.playBagDrop();
           setFlyingBag(null);
-          setHouses(currentScene.housesAfter);
-          setBoardState({
-            ...currentScene.boardState,
-            H: { orig: '5', crossed: true, top: '4', sub: '0', ans: null },
-            T: { orig: '0', crossed: true, top: '10', sub: '5', ans: null },
-          });
-        }, 1800);
-      } else if (currentSceneId === 4) {
-        // Tens give 10 to Ones
-        setFlyingBag({
-          type: '10',
-          from: 'tens',
-          to: 'ones',
-          label: '10 Candies',
-        });
-        sounds.playCandyBorrow();
-
-        setTimeout(() => {
-          sounds.playBagDrop();
-          setFlyingBag(null);
-          setHouses(currentScene.housesAfter);
-          setBoardState({
-            ...currentScene.boardState,
-            H: { orig: '5', crossed: true, top: '4', sub: '0', ans: null },
-            T: { orig: '0', crossed: true, mid: '10', top: '9', sub: '5', ans: null },
-            O: { orig: '0', crossed: true, top: '10', sub: '3', ans: null },
-          });
+          if (activeStep.housesAfter) {
+            setHouses(activeStep.housesAfter);
+          }
         }, 1800);
       }
     } else {
@@ -124,9 +125,9 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   };
 
-  // Handle Answer in Scene 5 (Subtraction columns)
+  // Handle column subtraction answer
   const handleAnswerSubtraction = (chosenVal) => {
-    const stepData = currentScene.subtractionSteps[subtractionStep];
+    const stepData = activeStep.subtractionSteps[subtractionStep];
     setSelectedOption(chosenVal);
 
     if (chosenVal === stepData.correct) {
@@ -135,28 +136,31 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
       sounds.playSuccess();
       sounds.playBagDrop();
 
+      const subtrahend = activeLevel.subtrahend;
+      const onesSub = subtrahend % 10;
+
       if (subtractionStep === 0) {
-        // Ones solved (10 - 3 = 7)
-        setAnswers((a) => ({ ...a, O: 7 }));
-        setCollectedCandies(3);
+        // Ones solved
+        setAnswers((a) => ({ ...a, O: stepData.correct }));
+        setCollectedCandies(onesSub);
         setHouses((prev) => ({
           ...prev,
-          ones: { ...prev.ones, value: 7, candies: 7 },
+          ones: { ...prev.ones, value: stepData.correct, candies: stepData.correct },
         }));
       } else if (subtractionStep === 1) {
-        // Tens solved (9 - 5 = 4)
-        setAnswers((a) => ({ ...a, T: 4 }));
-        setCollectedCandies(53);
+        // Tens solved
+        setAnswers((a) => ({ ...a, T: stepData.correct }));
+        setCollectedCandies(subtrahend);
         setHouses((prev) => ({
           ...prev,
-          tens: { ...prev.tens, value: 4, candies: 40 },
+          tens: { ...prev.tens, value: stepData.correct, candies: stepData.correct * 10 },
         }));
       } else if (subtractionStep === 2) {
-        // Hundreds solved (4 - 0 = 4)
-        setAnswers((a) => ({ ...a, H: 4 }));
+        // Hundreds solved
+        setAnswers((a) => ({ ...a, H: stepData.correct }));
         setHouses((prev) => ({
           ...prev,
-          hundreds: { ...prev.hundreds, value: 4, candies: 400 },
+          hundreds: { ...prev.hundreds, value: stepData.correct, candies: stepData.correct * 100 },
         }));
       }
     } else {
@@ -167,43 +171,92 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   };
 
-  // Continue to next scene or next subtraction step
+  // Continue button within a level
   const handleContinue = () => {
-    if (currentSceneId === 5) {
-      if (subtractionStep < 2) {
+    // If in subtraction phase
+    if (activeStep.isSubtractionPhase) {
+      if (subtractionStep < activeStep.subtractionSteps.length - 1) {
         setSubtractionStep((s) => s + 1);
         setSelectedOption(null);
         setIsCorrect(null);
         setFeedback('');
       } else {
-        // Completed all steps! Go to victory summary screen (Scene 6)
-        setCurrentSceneId(6);
+        // Completed all subtraction columns for this level!
+        finishCurrentLevel();
       }
     } else {
-      setCurrentSceneId((prev) => prev + 1);
+      // Step through next step in level
+      if (currentStepIndex < activeLevel.steps.length - 1) {
+        setCurrentStepIndex((prev) => prev + 1);
+      } else {
+        finishCurrentLevel();
+      }
     }
   };
 
-  // Replay current scene
-  const handleResetScene = () => {
+  // Mark active level complete
+  const finishCurrentLevel = () => {
+    sounds.playVictory();
+    setIsLevelComplete(true);
+
+    if (!completedLevels.includes(currentLevelNumber)) {
+      setCompletedLevels((prev) => [...prev, currentLevelNumber]);
+    }
+
+    // Unlock next level if available
+    const nextLevelNum = currentLevelNumber + 1;
+    if (nextLevelNum <= LEVELS.length && !unlockedLevels.includes(nextLevelNum)) {
+      setUnlockedLevels((prev) => [...prev, nextLevelNum]);
+    }
+  };
+
+  // Advance to next level (or victory screen if level 5)
+  const handleNextLevel = () => {
+    setIsLevelComplete(false);
+
+    if (currentLevelNumber >= 5) {
+      // Final victory!
+      setIsVictory(true);
+    } else {
+      setCurrentLevelNumber((prev) => prev + 1);
+      setCurrentStepIndex(0);
+    }
+  };
+
+  // Switch level from progress bar
+  const handleSelectLevel = (levelNum) => {
+    if (unlockedLevels.includes(levelNum)) {
+      setCurrentLevelNumber(levelNum);
+      setCurrentStepIndex(0);
+      setIsLevelComplete(false);
+    }
+  };
+
+  // Replay current level
+  const handleResetLevel = () => {
     sounds.playPop();
-    setHouses(currentScene.houses);
-    setBoardState(currentScene.boardState);
+    setCurrentStepIndex(0);
+    setIsLevelComplete(false);
     setSelectedOption(null);
     setIsCorrect(null);
     setFeedback('');
     setFlyingBag(null);
-    if (currentSceneId === 5) {
-      setSubtractionStep(0);
-      setAnswers({ H: null, T: null, O: null });
-      setCollectedCandies(0);
-    }
+    setSubtractionStep(0);
+    setAnswers({ H: null, T: null, O: null });
+    setCollectedCandies(0);
+    setHouses(activeLevel.steps[0].houses);
+    setBoardState(activeLevel.steps[0].boardState);
   };
 
-  // Restart whole game
+  // Restart whole game from beginning
   const handleRestartGame = () => {
     sounds.playPop();
-    setCurrentSceneId(1);
+    setCurrentLevelNumber(1);
+    setCurrentStepIndex(0);
+    setUnlockedLevels([1]);
+    setCompletedLevels([]);
+    setIsVictory(false);
+    setIsLevelComplete(false);
     setScore(100);
     setStars(3);
     setSubtractionStep(0);
@@ -211,18 +264,19 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     setCollectedCandies(0);
   };
 
-  // Toggle Hint Popover
+  // Toggle Hint
   const handleShowHint = () => {
     sounds.playPop();
     setHintVisible((h) => !h);
   };
 
-  // Render Completed Summary Screen
-  if (currentSceneId === 6) {
+  // VICTORY SCREEN: Displayed after Level 5 completion
+  if (isVictory) {
     return (
       <GameSummary
         score={score}
         stars={stars}
+        completedLevels={completedLevels}
         onPlayAgain={handleRestartGame}
         onOpenStory={onOpenStory}
         onOpenPractice={onOpenPractice}
@@ -230,141 +284,194 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     );
   }
 
+  // Active house highlight checks
+  const isHundredsActive =
+    (activeLevel.level === 1 && (activeStep.stepId === 1 || activeStep.stepId === 3)) ||
+    activeStep.bagAnimation?.from === 'hundreds' ||
+    (activeStep.isSubtractionPhase && subtractionStep === 2);
+
+  const isTensActive =
+    (activeLevel.level === 1 && (activeStep.stepId === 2 || activeStep.stepId === 3 || activeStep.stepId === 4)) ||
+    activeStep.bagAnimation?.from === 'tens' ||
+    activeStep.bagAnimation?.to === 'tens' ||
+    (activeStep.isSubtractionPhase && subtractionStep === 1);
+
+  const isOnesActive =
+    (activeLevel.level === 1 && (activeStep.stepId === 2 || activeStep.stepId === 4)) ||
+    activeStep.bagAnimation?.to === 'ones' ||
+    (activeStep.isSubtractionPhase && subtractionStep === 0);
+
   return (
-    <div className="w-full max-w-6xl mx-auto px-3 sm:px-6 py-4 flex flex-col gap-4 relative">
-      {/* Top Scene Progress & Controls */}
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2 flex flex-col gap-3 sm:gap-4 relative">
+      {/* 5-Level Visual Progression Header */}
       <ProgressBar
-        currentScene={currentSceneId}
-        totalScenes={5}
+        currentLevel={currentLevelNumber}
+        unlockedLevels={unlockedLevels}
+        completedLevels={completedLevels}
+        onSelectLevel={handleSelectLevel}
+        currentStep={currentStepIndex + 1}
+        totalSteps={activeLevel.steps.length}
         score={score}
         stars={stars}
-        onResetScene={handleResetScene}
+        onResetLevel={handleResetLevel}
         onRestartGame={handleRestartGame}
         onShowHint={handleShowHint}
       />
 
-      {/* Hint Alert */}
-      {hintVisible && currentScene.hint && (
-        <div className="w-full max-w-xl mx-auto p-3 rounded-2xl bg-amber-950/90 border-2 border-amber-400 text-amber-200 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-lg animate-fadeIn">
+      {/* Pop-up Hint Bar if requested */}
+      {hintVisible && activeStep.hint && (
+        <div className="w-full p-3 rounded-2xl bg-amber-950/90 border-2 border-amber-400 text-amber-200 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-lg animate-fadeIn">
           <div className="flex items-center gap-2">
             <span className="text-xl">💡</span>
-            <span>{currentScene.hint}</span>
+            <span>{activeStep.hint}</span>
           </div>
           <button
             onClick={() => setHintVisible(false)}
-            className="text-xs bg-amber-800/80 hover:bg-amber-700 text-white px-2 py-1 rounded-lg ml-2 shrink-0"
+            className="text-xs bg-amber-800/80 hover:bg-amber-700 text-white px-2.5 py-1 rounded-lg ml-2 shrink-0 cursor-pointer"
           >
             Got it!
           </button>
         </div>
       )}
 
-      {/* Spoken Character Dialogue */}
-      <DialogueBubble
-        speaker={currentScene.speaker}
-        dialogue={currentScene.dialogue}
-        speechText={currentScene.speechText}
-        badge={currentScene.badge}
-      />
-
-      {/* Main Street Stage: Haunted Houses & Math Board */}
-      <div className="relative w-full bg-[#180a33]/70 border-3 border-purple-600/40 rounded-3xl p-4 sm:p-6 shadow-2xl backdrop-blur-md overflow-hidden">
-        {/* Night Sky Background Elements */}
-        <div className="absolute top-2 left-6 text-3xl select-none animate-pulse">🌕</div>
-        <div className="absolute top-8 left-28 text-base text-purple-300/40 select-none">✨</div>
-        <div className="absolute top-4 right-20 text-base text-purple-300/40 select-none">✨</div>
-        <div className="absolute top-3 right-8 text-xl select-none animate-bounce">🦇</div>
-
-        {/* Flying Candy Bag Animation Layer */}
-        {flyingBag && (
-          <CandyBag
-            type={flyingBag.type}
-            from={flyingBag.from}
-            to={flyingBag.to}
-            label={flyingBag.label}
-          />
-        )}
-
-        {/* Center Stage: Three Living Haunted Houses */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-6 justify-items-center items-end max-w-2xl mx-auto my-2 z-10 relative">
-          <HauntedHouse
-            type="hundreds"
-            value={houses.hundreds.display}
-            candies={houses.hundreds.candies}
-            mood={houses.hundreds.mood}
-            label={houses.hundreds.label}
-            isActive={currentSceneId === 3}
-            isGiving={currentSceneId === 3 && isCorrect}
+      {/* RESPONSIVE TWO-COLUMN GRID:
+          LEFT: Visual Learning Area (~60-65% width: lg:col-span-7 xl:col-span-8)
+          RIGHT: MCQ / Question Area (~35-40% width: lg:col-span-5 xl:col-span-4, sticky on desktop)
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+        {/* LEFT COLUMN: VISUAL LEARNING AREA */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-3">
+          {/* Spoken Dialogue Bubble */}
+          <DialogueBubble
+            speaker={activeStep.speaker}
+            dialogue={activeStep.dialogue}
+            speechText={activeStep.speechText}
+            badge={activeLevel.title}
           />
 
-          <HauntedHouse
-            type="tens"
-            value={houses.tens.display}
-            candies={houses.tens.candies}
-            mood={houses.tens.mood}
-            label={houses.tens.label}
-            isActive={currentSceneId === 2 || currentSceneId === 4}
-            isReceiving={currentSceneId === 3 && isCorrect}
-            isGiving={currentSceneId === 4 && isCorrect}
-          />
+          {/* Main Visual Stage: Living Haunted Houses & Borrowing Arena */}
+          <div className="relative w-full bg-[#180a33]/85 border-3 border-purple-600/40 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-hidden">
+            {/* Night Sky Atmospheric Elements */}
+            <div className="absolute top-2 left-6 text-2xl sm:text-3xl select-none animate-pulse">🌕</div>
+            <div className="absolute top-6 left-28 text-sm text-purple-300/40 select-none">✨</div>
+            <div className="absolute top-4 right-20 text-sm text-purple-300/40 select-none">✨</div>
+            <div className="absolute top-3 right-8 text-lg sm:text-xl select-none animate-bounce">🦇</div>
 
-          <HauntedHouse
-            type="ones"
-            value={houses.ones.display}
-            candies={houses.ones.candies}
-            mood={houses.ones.mood}
-            label={houses.ones.label}
-            isActive={currentSceneId === 2}
-            isReceiving={currentSceneId === 4 && isCorrect}
-          />
+            {/* Flying Candy Bag Animation Layer */}
+            {flyingBag && (
+              <CandyBag
+                type={flyingBag.type}
+                from={flyingBag.from}
+                to={flyingBag.to}
+                label={flyingBag.label}
+              />
+            )}
+
+            {/* Living Haunted Houses (Hundreds, Tens, Ones) */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 justify-items-center items-end max-w-xl mx-auto my-2 z-10 relative">
+              <HauntedHouse
+                type="hundreds"
+                value={houses.hundreds.display}
+                candies={houses.hundreds.candies}
+                mood={houses.hundreds.mood}
+                label={houses.hundreds.label}
+                isActive={isHundredsActive}
+                isGiving={activeStep.bagAnimation?.from === 'hundreds' && isCorrect}
+              />
+
+              <HauntedHouse
+                type="tens"
+                value={houses.tens.display}
+                candies={houses.tens.candies}
+                mood={houses.tens.mood}
+                label={houses.tens.label}
+                isActive={isTensActive}
+                isReceiving={activeStep.bagAnimation?.to === 'tens' && isCorrect}
+                isGiving={activeStep.bagAnimation?.from === 'tens' && isCorrect}
+              />
+
+              <HauntedHouse
+                type="ones"
+                value={houses.ones.display}
+                candies={houses.ones.candies}
+                mood={houses.ones.mood}
+                label={houses.ones.label}
+                isActive={isOnesActive}
+                isReceiving={activeStep.bagAnimation?.to === 'ones' && isCorrect}
+              />
+            </div>
+
+            {/* Cobblestone Street Ground Divider */}
+            <div className="w-full h-2.5 bg-gradient-to-r from-amber-700 via-purple-900 to-amber-700 rounded-full my-2.5 border-t border-amber-400/50 shadow" />
+
+            {/* Bottom Learning Stage: Trick-or-Treaters & Formal Math Board */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center mt-1">
+              {/* Trick-or-Treaters with Dynamic Needed Candies */}
+              <TrickOrTreater
+                collectedCandies={collectedCandies}
+                targetCandies={activeLevel.subtrahend}
+                isCollecting={subtractionStep > 0}
+                isCelebrated={collectedCandies === activeLevel.subtrahend}
+              />
+
+              {/* Formal Vertical Subtraction Math Board */}
+              <PlaceValueBoard
+                boardState={boardState}
+                minuend={activeLevel.minuend}
+                subtrahend={activeLevel.subtrahend}
+                diff={activeLevel.diff}
+                highlightCol={
+                  activeStep.isSubtractionPhase
+                    ? subtractionStep === 0
+                      ? 'O'
+                      : subtractionStep === 1
+                      ? 'T'
+                      : 'H'
+                    : boardState.highlightCol
+                }
+                showResult={
+                  activeStep.isSubtractionPhase && subtractionStep === 2 && isCorrect
+                }
+                answers={answers}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Street Ground Line with Cobblestones & Pumpkins */}
-        <div className="w-full h-3 bg-gradient-to-r from-amber-700 via-purple-900 to-amber-700 rounded-full my-3 border-t border-amber-400/50 shadow" />
-
-        {/* Bottom Stage Split: Trick-or-Treaters & Formal Math Board */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center justify-center mt-2">
-          {/* Left: Trick-or-Treaters with Candy Goal */}
-          <TrickOrTreater
-            collectedCandies={collectedCandies}
-            targetCandies={53}
-            isCollecting={subtractionStep > 0}
-            isCelebrated={collectedCandies === 53}
-          />
-
-          {/* Right: Place-Value Formal Math Board */}
-          <PlaceValueBoard
-            boardState={boardState}
-            highlightCol={
-              currentSceneId === 5
-                ? subtractionStep === 0
-                  ? 'O'
-                  : subtractionStep === 1
-                  ? 'T'
-                  : 'H'
-                : currentScene.boardState.highlightCol
-            }
-            showResult={currentSceneId === 5 && subtractionStep === 2 && isCorrect}
-            answers={answers}
+        {/* RIGHT COLUMN: MCQ / QUESTION PANEL */}
+        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-4 self-start flex flex-col gap-3">
+          <AnswerPanel
+            currentLevel={currentLevelNumber}
+            totalLevels={LEVELS.length}
+            levelTitle={activeLevel.title}
+            levelIcon={activeLevel.icon}
+            stepTitle={activeStep.title}
+            question={activeStep.question}
+            options={activeStep.options}
+            onSelectOption={handleSelectOption}
+            selectedOption={selectedOption}
+            isCorrect={isCorrect}
+            feedback={feedback}
+            onContinue={handleContinue}
+            onStartGame={handleStartGame}
+            isStartStep={activeStep.isStartStep}
+            isSubtractionPhase={activeStep.isSubtractionPhase}
+            subtractionStep={subtractionStep}
+            subtractionData={activeStep.subtractionSteps}
+            onAnswerSubtraction={handleAnswerSubtraction}
+            isLevelComplete={isLevelComplete}
+            levelSummaryData={{
+              minuend: activeLevel.minuend,
+              subtrahend: activeLevel.subtrahend,
+              diff: activeLevel.diff,
+              summaryExplanation: `Awesome! You regrouped ${activeLevel.minuend} into ${Math.floor(activeLevel.minuend / 100) - 1} hundreds, 9 tens, and 10 ones, and subtracted ${activeLevel.subtrahend} to get ${activeLevel.diff}!`,
+            }}
+            onNextLevel={handleNextLevel}
+            hint={activeStep.hint}
+            onShowHint={handleShowHint}
           />
         </div>
       </div>
-
-      {/* Bottom Interactive Decision / Question Panel */}
-      <AnswerPanel
-        sceneId={currentSceneId}
-        question={currentScene.question}
-        options={currentScene.options}
-        onSelectOption={handleSelectOption}
-        selectedOption={selectedOption}
-        isCorrect={isCorrect}
-        feedback={feedback}
-        onContinue={handleContinue}
-        onStartGame={handleStartGame}
-        subtractionStep={subtractionStep}
-        subtractionData={currentScene.subtractionSteps}
-        onAnswerSubtraction={handleAnswerSubtraction}
-      />
     </div>
   );
 }

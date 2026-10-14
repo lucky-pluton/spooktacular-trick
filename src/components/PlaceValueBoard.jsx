@@ -17,8 +17,16 @@ export default function PlaceValueBoard({
   highlightCol = null,
   showResult = false,
   answers = { H: null, T: null, O: null },
+  minuend = 500,
+  subtrahend = 53,
+  diff = 447,
 }) {
   const { H, T, O } = boardState;
+  const expectedH = Math.floor(diff / 100);
+  const expectedT = Math.floor((diff % 100) / 10);
+  const expectedO = diff % 10;
+  const isSolved = showResult || (answers.H !== null && answers.T !== null && answers.O !== null && (answers.H * 100 + answers.T * 10 + answers.O === diff));
+
 
   return (
     <div className="bg-[#120824] border-3 border-purple-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl max-w-xs sm:max-w-sm w-full mx-auto relative overflow-hidden">
@@ -134,34 +142,34 @@ export default function PlaceValueBoard({
           =
         </div>
 
-        {/* Hundreds Answer (4) */}
+        {/* Hundreds Answer */}
         <div className="flex items-center justify-center h-10">
           {answers.H !== null ? (
             <span className="text-purple-300 animate-bounce">{answers.H}</span>
-          ) : showResult ? (
-            <span className="text-purple-300">4</span>
+          ) : showResult || (boardState.step === 'subtracting' && boardState.H.ans !== null) ? (
+            <span className="text-purple-300">{boardState.H.ans ?? expectedH}</span>
           ) : (
             <span className="text-gray-700 font-mono text-lg">?</span>
           )}
         </div>
 
-        {/* Tens Answer (4) */}
+        {/* Tens Answer */}
         <div className="flex items-center justify-center h-10">
           {answers.T !== null ? (
             <span className="text-teal-300 animate-bounce">{answers.T}</span>
-          ) : showResult ? (
-            <span className="text-teal-300">4</span>
+          ) : showResult || (boardState.step === 'subtracting' && boardState.T.ans !== null) ? (
+            <span className="text-teal-300">{boardState.T.ans ?? expectedT}</span>
           ) : (
             <span className="text-gray-700 font-mono text-lg">?</span>
           )}
         </div>
 
-        {/* Ones Answer (7) */}
+        {/* Ones Answer */}
         <div className="flex items-center justify-center h-10">
           {answers.O !== null ? (
             <span className="text-amber-300 animate-bounce">{answers.O}</span>
-          ) : showResult ? (
-            <span className="text-amber-300">7</span>
+          ) : showResult || (boardState.step === 'subtracting' && boardState.O.ans !== null) ? (
+            <span className="text-amber-300">{boardState.O.ans ?? expectedO}</span>
           ) : (
             <span className="text-gray-700 font-mono text-lg">?</span>
           )}
@@ -170,12 +178,12 @@ export default function PlaceValueBoard({
 
       {/* Total Candy Equation Footer */}
       <div className="mt-3 pt-2 border-t border-purple-800/40 text-center text-xs font-semibold text-purple-300">
-        {showResult || (answers.H === 4 && answers.T === 4 && answers.O === 7) ? (
+        {isSolved ? (
           <span className="text-emerald-300 font-bold text-sm tracking-wide">
-            🎉 500 − 53 = <span className="text-white font-extrabold text-base">447</span>
+            🎉 {minuend} − {subtrahend} = <span className="text-white font-extrabold text-base">{diff}</span>
           </span>
         ) : (
-          <span>Total Candies Remain: <b className="text-amber-400">500</b> (No candies lost!)</span>
+          <span>Total Candies Remain: <b className="text-amber-400">{minuend}</b> (No candies lost!)</span>
         )}
       </div>
     </div>

@@ -3,7 +3,7 @@ import Header from './components/Header';
 import GamePage from './components/GamePage';
 import ComicStory from './components/ComicStory';
 import PracticeMode from './components/PracticeMode';
-import { Share2, Printer, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('game'); // 'game' | 'story' | 'practice'

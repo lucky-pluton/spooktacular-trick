@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Mic, MicOff, Share2, Printer, Sparkles, BookOpen, Gamepad2, FlaskConical, Check } from 'lucide-react';
+import { Volume2, VolumeX, Mic, MicOff, Share2, Printer, BookOpen, Gamepad2, FlaskConical, Check } from 'lucide-react';
 import { sounds } from '../audio/soundEffects';
 
 /**

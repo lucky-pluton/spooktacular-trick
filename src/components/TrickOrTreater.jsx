@@ -11,6 +11,9 @@ export default function TrickOrTreater({
   isCollecting = false,
   isCelebrated = false,
 }) {
+  const tensNeeded = Math.floor(targetCandies / 10);
+  const onesNeeded = targetCandies % 10;
+
   return (
     <div className="flex flex-col items-center bg-purple-950/70 border-2 border-orange-500/60 rounded-2xl p-3 shadow-xl backdrop-blur-sm max-w-sm w-full mx-auto">
       {/* Header Tag */}
@@ -47,7 +50,7 @@ export default function TrickOrTreater({
             <polygon points="35,52 40,48 40,56" fill="#ff7700" />
             <circle cx="35" cy="52" r="2" fill="#ffaa00" />
           </svg>
-          <span className="text-[11px] font-bold text-gray-300 mt-1">Ghostie (Needs 3 Ones)</span>
+          <span className="text-[11px] font-bold text-gray-300 mt-1">Ghostie (Needs {onesNeeded} Ones)</span>
         </div>
 
         {/* Little Witch */}
@@ -68,7 +71,7 @@ export default function TrickOrTreater({
             {/* Purple Robe */}
             <path d="M24 62 L46 62 L50 82 L20 82 Z" fill="#3c096c" />
           </svg>
-          <span className="text-[11px] font-bold text-gray-300 mt-1">Witchy (Needs 5 Tens)</span>
+          <span className="text-[11px] font-bold text-gray-300 mt-1">Witchy (Needs {tensNeeded} Tens)</span>
         </div>
       </div>
 
@@ -87,7 +90,7 @@ export default function TrickOrTreater({
               Candies Needed:
             </div>
             <div className="text-xs text-amber-300 font-bold">
-              5 Tens (50) + 3 Ones (3) = <span className="text-sm font-extrabold text-white">53</span>
+              {tensNeeded} Tens ({tensNeeded * 10}) + {onesNeeded} Ones ({onesNeeded}) = <span className="text-sm font-extrabold text-white">{targetCandies}</span>
             </div>
           </div>
         </div>
@@ -103,7 +106,7 @@ export default function TrickOrTreater({
 
       {isCelebrated && (
         <div className="mt-2 text-xs font-extrabold text-emerald-300 bg-emerald-950/80 border border-emerald-500 px-3 py-1 rounded-full animate-pulse text-center">
-          🎉 Buckets Full! 53 Candies Collected! 🎉
+          🎉 Buckets Full! {targetCandies} Candies Collected! 🎉
         </div>
       )}
     </div>

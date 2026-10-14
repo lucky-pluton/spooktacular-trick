@@ -40,16 +40,16 @@ export default function PlaceValueBoard({
         </span>
       </div>
 
-      {/* Column Headers (H, T, O) */}
+        {/* Column Headers (H, T, O) */}
       <div className="grid grid-cols-4 gap-2 pt-3 pb-1 text-center font-extrabold text-sm sm:text-base border-b-2 border-purple-700/40">
         <div className="text-gray-500 font-mono text-xs flex items-center justify-center">Place:</div>
-        <div className={`transition-colors py-0.5 rounded ${highlightCol === 'H' ? 'bg-purple-800/60 text-purple-300 ring-2 ring-purple-400' : 'text-purple-400'}`}>
+        <div className={`transition-all py-0.5 rounded-lg ${highlightCol === 'H' ? 'bg-purple-800/80 text-purple-200 ring-2 ring-purple-400 shadow-[0_0_12px_rgba(184,69,255,0.6)]' : 'text-purple-400'}`}>
           H <span className="text-[10px] block font-normal text-purple-300/80">(100s)</span>
         </div>
-        <div className={`transition-colors py-0.5 rounded ${highlightCol === 'T' ? 'bg-teal-800/60 text-teal-300 ring-2 ring-teal-400' : 'text-teal-400'}`}>
+        <div className={`transition-all py-0.5 rounded-lg ${highlightCol === 'T' ? 'bg-teal-800/80 text-teal-200 ring-2 ring-teal-400 shadow-[0_0_12px_rgba(0,255,204,0.6)]' : 'text-teal-400'}`}>
           T <span className="text-[10px] block font-normal text-teal-300/80">(10s)</span>
         </div>
-        <div className={`transition-colors py-0.5 rounded ${highlightCol === 'O' ? 'bg-amber-800/60 text-amber-300 ring-2 ring-amber-400' : 'text-amber-400'}`}>
+        <div className={`transition-all py-0.5 rounded-lg ${highlightCol === 'O' ? 'bg-amber-800/80 text-amber-200 ring-2 ring-amber-400 shadow-[0_0_12px_rgba(255,180,0,0.6)]' : 'text-amber-400'}`}>
           O <span className="text-[10px] block font-normal text-amber-300/80">(1s)</span>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Hundreds Top */}
-        <div className="flex items-center justify-center h-7">
+        <div className={`flex items-center justify-center h-7 rounded-lg transition-colors ${highlightCol === 'H' ? 'bg-purple-900/30 ring-1 ring-purple-400/50' : ''}`}>
           {H.top ? (
             <span className="inline-block px-1.5 py-0.5 bg-purple-900/90 border border-purple-400 text-purple-200 rounded font-black text-sm animate-pulse shadow">
               {H.top}
@@ -72,7 +72,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Tens Top (Could have intermediate 10 then 9) */}
-        <div className="flex items-center justify-center h-7 gap-1">
+        <div className={`flex items-center justify-center h-7 gap-1 rounded-lg transition-colors ${highlightCol === 'T' ? 'bg-teal-900/30 ring-1 ring-teal-400/50' : ''}`}>
           {T.mid && (
             <span className="line-through text-gray-500 text-xs font-bold">
               {T.mid}
@@ -88,7 +88,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Ones Top */}
-        <div className="flex items-center justify-center h-7">
+        <div className={`flex items-center justify-center h-7 rounded-lg transition-colors ${highlightCol === 'O' ? 'bg-amber-900/30 ring-1 ring-amber-400/50' : ''}`}>
           {O.top ? (
             <span className="inline-block px-1.5 py-0.5 bg-amber-900/90 border border-amber-400 text-amber-200 rounded font-black text-sm animate-pulse shadow">
               {O.top}
@@ -99,38 +99,38 @@ export default function PlaceValueBoard({
         </div>
       </div>
 
-      {/* Original Minuend Row (5 0 0) with Strike-throughs */}
+      {/* Original Minuend Row with Strike-throughs */}
       <div className="grid grid-cols-4 gap-2 py-1 text-center font-black text-xl sm:text-2xl text-white">
         <div className="text-gray-600 font-mono text-sm flex items-center justify-center">Start:</div>
 
-        {/* Hundreds (5) */}
-        <div className="relative flex items-center justify-center">
+        {/* Hundreds */}
+        <div className={`relative flex items-center justify-center rounded-lg transition-colors ${highlightCol === 'H' ? 'bg-purple-900/30' : ''}`}>
           <span className={`${H.crossed ? 'line-through text-gray-500 decoration-red-500 decoration-3' : 'text-purple-100'}`}>
             {H.orig}
           </span>
         </div>
 
-        {/* Tens (0) */}
-        <div className="relative flex items-center justify-center">
+        {/* Tens */}
+        <div className={`relative flex items-center justify-center rounded-lg transition-colors ${highlightCol === 'T' ? 'bg-teal-900/30' : ''}`}>
           <span className={`${T.crossed ? 'line-through text-gray-500 decoration-red-500 decoration-3' : 'text-teal-100'}`}>
             {T.orig}
           </span>
         </div>
 
-        {/* Ones (0) */}
-        <div className="relative flex items-center justify-center">
+        {/* Ones */}
+        <div className={`relative flex items-center justify-center rounded-lg transition-colors ${highlightCol === 'O' ? 'bg-amber-900/30' : ''}`}>
           <span className={`${O.crossed ? 'line-through text-gray-500 decoration-red-500 decoration-3' : 'text-amber-100'}`}>
             {O.orig}
           </span>
         </div>
       </div>
 
-      {/* Subtrahend Row (- 0 5 3) */}
+      {/* Subtrahend Row (- sub) */}
       <div className="grid grid-cols-4 gap-2 py-1 text-center font-black text-xl sm:text-2xl text-orange-400">
         <div className="font-extrabold text-2xl text-red-400 flex items-center justify-center">−</div>
-        <div className="text-purple-300">{H.sub}</div>
-        <div className="text-teal-300">{T.sub}</div>
-        <div className="text-amber-300">{O.sub}</div>
+        <div className={`rounded-lg transition-colors ${highlightCol === 'H' ? 'bg-purple-900/40 text-purple-200 ring-1 ring-purple-400/60 font-black' : 'text-purple-300'}`}>{H.sub}</div>
+        <div className={`rounded-lg transition-colors ${highlightCol === 'T' ? 'bg-teal-900/40 text-teal-200 ring-1 ring-teal-400/60 font-black' : 'text-teal-300'}`}>{T.sub}</div>
+        <div className={`rounded-lg transition-colors ${highlightCol === 'O' ? 'bg-amber-900/40 text-amber-200 ring-1 ring-amber-400/60 font-black' : 'text-amber-300'}`}>{O.sub}</div>
       </div>
 
       {/* Chalkboard Divider Line */}
@@ -143,7 +143,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Hundreds Answer */}
-        <div className="flex items-center justify-center h-10">
+        <div className={`flex items-center justify-center h-10 rounded-lg transition-all ${highlightCol === 'H' ? 'bg-purple-900/40 ring-2 ring-purple-400 shadow-[0_0_10px_rgba(184,69,255,0.5)]' : ''}`}>
           {answers.H !== null ? (
             <span className="text-purple-300 animate-bounce">{answers.H}</span>
           ) : showResult || (boardState.step === 'subtracting' && boardState.H.ans !== null) ? (
@@ -154,7 +154,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Tens Answer */}
-        <div className="flex items-center justify-center h-10">
+        <div className={`flex items-center justify-center h-10 rounded-lg transition-all ${highlightCol === 'T' ? 'bg-teal-900/40 ring-2 ring-teal-400 shadow-[0_0_10px_rgba(0,255,204,0.5)]' : ''}`}>
           {answers.T !== null ? (
             <span className="text-teal-300 animate-bounce">{answers.T}</span>
           ) : showResult || (boardState.step === 'subtracting' && boardState.T.ans !== null) ? (
@@ -165,7 +165,7 @@ export default function PlaceValueBoard({
         </div>
 
         {/* Ones Answer */}
-        <div className="flex items-center justify-center h-10">
+        <div className={`flex items-center justify-center h-10 rounded-lg transition-all ${highlightCol === 'O' ? 'bg-amber-900/40 ring-2 ring-amber-400 shadow-[0_0_10px_rgba(255,180,0,0.5)]' : ''}`}>
           {answers.O !== null ? (
             <span className="text-amber-300 animate-bounce">{answers.O}</span>
           ) : showResult || (boardState.step === 'subtracting' && boardState.O.ans !== null) ? (

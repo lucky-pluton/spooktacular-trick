@@ -242,7 +242,9 @@ class SoundEngine {
     if ('speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
-      } catch (e) {}
+      } catch {
+        // Ignored
+      }
     }
   }
 }

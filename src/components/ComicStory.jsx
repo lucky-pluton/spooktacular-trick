@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Volume2, Sparkles, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Volume2, Play } from 'lucide-react';
 import { COMIC_PAGES } from '../data/gameScenes';
 import { sounds } from '../audio/soundEffects';
 

@@ -129,22 +129,33 @@ export default function HauntedHouse({
 
   return (
     <div
-      className={`relative flex flex-col items-center transition-all duration-300 ${
-        isActive ? 'scale-105 filter drop-shadow-[0_0_18px_rgba(255,180,0,0.45)]' : 'hover:scale-[1.02]'
+      className={`relative flex flex-col items-center transition-all duration-300 rounded-2xl p-1.5 ${
+        isActive
+          ? 'scale-105 filter drop-shadow-[0_0_25px_rgba(255,180,0,0.9)] ring-3 ring-amber-400 bg-amber-500/10'
+          : 'hover:scale-[1.02]'
       }`}
       style={{ minWidth: '150px' }}
     >
       {/* Top Banner Tag */}
       <div
-        className="px-2.5 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-1.5 border flex items-center gap-1.5 shadow-md"
-        style={{
-          backgroundColor: '#1b0e2b',
-          borderColor: config.accentColor,
-          color: config.glowColor,
-        }}
+        className={`px-2.5 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-1.5 border flex items-center gap-1.5 shadow-md transition-all ${
+          isActive
+            ? 'bg-amber-400 text-black border-white font-black shadow-[0_0_15px_rgba(255,180,0,0.8)] scale-105'
+            : 'border'
+        }`}
+        style={
+          isActive
+            ? {}
+            : {
+                backgroundColor: '#1b0e2b',
+                borderColor: config.accentColor,
+                color: config.glowColor,
+              }
+        }
       >
         <span>{type === 'hundreds' ? '🏰' : type === 'tens' ? '🗼' : '🎃'}</span>
         <span>{config.shortName}</span>
+        {isActive && <span className="animate-ping text-[10px]">✨</span>}
       </div>
 
       {/* Main Living House SVG Illustration */}

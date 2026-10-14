@@ -17,6 +17,9 @@ export default function CandyBag({
 
   return (
     <div
+      data-from={from}
+      data-to={to}
+      onAnimationEnd={onComplete}
       className="absolute top-1/2 z-30 pointer-events-none transform -translate-y-1/2 transition-all duration-1000 ease-in-out"
       style={{
         left: from === 'hundreds' ? '25%' : '50%',
@@ -35,7 +38,7 @@ export default function CandyBag({
               {isHundred ? '1 HUNDRED BAG' : '1 TEN BAG'}
             </span>
             <span className="font-extrabold text-xs text-red-900 leading-tight">
-              {isHundred ? '100 Candies (= 10 Tens)' : '10 Candies (= 10 Ones)'}
+              {label || (isHundred ? '100 Candies (= 10 Tens)' : '10 Candies (= 10 Ones)')}
             </span>
           </div>
         </div>

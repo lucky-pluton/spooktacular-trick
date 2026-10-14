@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import HauntedHouse from './HauntedHouse';
-import QuestionModal from './QuestionModal';
+import ConnectedNeighbourhood from './ConnectedNeighbourhood';
 import TrickOrTreater from './TrickOrTreater';
-import CandyBag from './CandyBag';
 import PlaceValueBoard from './PlaceValueBoard';
 import ProgressBar from './ProgressBar';
 import LevelCompleteModal from './LevelCompleteModal';
@@ -30,24 +28,21 @@ function shuffleOptions(options) {
 
 /**
  * GamePage Component
- * Full-Screen Haunted Houses Scene + Centered Question Popup Modal:
+ * Connected Haunted-House Neighbourhood + Automatic Cloud-Shaped Thought Bubbles:
  * 
- * 1. Full-Screen Haunted Houses:
- *    Occupies almost the entire viewport with 3 large, living haunted houses (Hundreds, Tens, Ones).
- *    Clean Halloween atmosphere, dark background, subtle spooky details.
- *    No permanently visible question panels crowding the houses.
- * 2. Centered Question Popup Modal:
- *    Multiple-choice question appears in a centered popup overlay that dims the scene behind it.
- *    Houses remain clearly visible behind the modal.
- *    4 large, tap-friendly answer choices labelled A, B, C, D (randomized).
- * 3. Connected Actions & Animations:
- *    After answering correctly, the popup closes to showcase the borrowing animation in the houses.
- *    Flying candy bags, living facial expressions, and persistent written subtraction board update in sync.
- * 4. 5 Compulsory Sequential Levels:
+ * 1. One Connected Neighbourhood:
+ *    Houses live side-by-side on a continuous street without separate card borders.
+ * 2. Automatic Cloud-Shaped Thought Bubble Questions:
+ *    Appears automatically when the active house encounters a question — no separate button click needed!
+ * 3. 4 Randomized Answer Choices (A, B, C, D):
+ *    Shuffled on load and on retry; validated by stable isCorrect / id, never array index.
+ * 4. Visible Written Subtraction Board:
+ *    Shows standard vertical borrowing algorithm (strike-through and regrouped digits) in real time.
+ * 5. 5 Compulsory Sequential Levels:
  *    500−53=447, 400−65=335, 300−28=272, 600−84=516, 700−49=651.
- * 5. Points & Celebratory Level Completion Modals.
+ * 6. Points & Celebratory Level Completion Modals.
  */
-export default function GamePage({ onOpenStory, onOpenPractice }) {
+export default function GamePage({ onOpenStory, onOpenPractice, onSwitchMode }) {
   // Level progression (5 compulsory sequential levels)
   const [currentLevelNumber, setCurrentLevelNumber] = useState(1);
   const [unlockedLevels, setUnlockedLevels] = useState([1]);
@@ -91,9 +86,9 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [feedback, setFeedback] = useState('');
+  const [isQuestionVisible, setIsQuestionVisible] = useState(true);
 
-  // Modals state: Question Modal (centered popup) & Level Complete Modal
-  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(true);
+  // Level Complete Modal
   const [isLevelCompleteModalOpen, setIsLevelCompleteModalOpen] = useState(false);
 
   // Smooth counting animation for display score
@@ -131,7 +126,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     // Shuffle options so correct answer is randomly distributed across A, B, C, D
     if (targetStep.options && targetStep.options.length > 0) {
       setShuffledOptions(shuffleOptions(targetStep.options));
-      setIsQuestionModalOpen(true);
+      setIsQuestionVisible(true);
     }
   }, []);
 
@@ -142,7 +137,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   }, [currentQuestionKey, activeStep.speechText]);
 
-  // Handle option selection inside the centered QuestionModal
+  // Handle option selection inside the ThoughtCloudBubble
   const handleSelectOption = (opt) => {
     setSelectedOption(opt.id ?? opt.value ?? opt.text);
     const attempts = questionAttempts[currentQuestionKey] || 0;
@@ -205,10 +200,54 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     }
   };
 
-  // Continue after correct answer: Close modal and trigger house/board animations
-  const handleModalContinue = () => {
-    // 1. Close the popup modal so player can see the action in the houses!
-    setIsQuestionModalOpen(false);
+  // Finish current level and award level bonuses
+  const completeActiveLevel = useCallback(() => {
+    sounds.playVictory();
+
+    // Mark completed
+    if (!completedLevels.includes(currentLevelNumber)) {
+      setCompletedLevels((prev) => [...prev, currentLevelNumber]);
+    }
+
+    // Unlock next level
+    const nextLvl = currentLevelNumber + 1;
+    if (nextLvl <= LEVELS.length && !unlockedLevels.includes(nextLvl)) {
+      setUnlockedLevels((prev) => [...prev, nextLvl]);
+    }
+
+    // Award level bonuses once
+    const levelBonusKey = `level_bonus_${currentLevelNumber}`;
+    if (!awardedQuestionKeys.includes(levelBonusKey)) {
+      let bonusTotal = 200; // Level completion bonus
+      if (!usedHintThisLevel) {
+        bonusTotal += 50; // No-hint bonus
+      }
+      if (currentLevelNumber === 5) {
+        bonusTotal += 500; // Grand Wizard 5-level bonus
+      }
+
+      setAwardedQuestionKeys((prev) => [...prev, levelBonusKey]);
+      setTotalScore((s) => s + bonusTotal);
+      setLevelPointsEarned((p) => p + bonusTotal);
+    }
+
+    // Show level completion celebratory modal
+    setIsLevelCompleteModalOpen(true);
+  }, [completedLevels, currentLevelNumber, unlockedLevels, awardedQuestionKeys, usedHintThisLevel]);
+
+  // Helper to advance to next step or finish level
+  const advanceStep = useCallback(() => {
+    if (currentStepIndex < activeLevel.steps.length - 1) {
+      goToStep(currentLevelNumber, currentStepIndex + 1);
+    } else {
+      completeActiveLevel();
+    }
+  }, [currentStepIndex, activeLevel.steps.length, currentLevelNumber, goToStep, completeActiveLevel]);
+
+  // Continue after correct answer: Close thought bubble and trigger neighbourhood animation
+  const handleContinue = () => {
+    // 1. Close thought cloud so child can clearly see the action between houses
+    setIsQuestionVisible(false);
 
     // 2. Handle asking animation between houses
     if (activeStep.askingAnimation) {
@@ -245,55 +284,11 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         }, 1200);
       }, 1600);
     } else {
-      // No bag animation: give player a brief moment to see updated digits/results, then advance
+      // No bag animation: brief pause then advance
       setTimeout(() => {
         advanceStep();
-      }, 1300);
+      }, 1100);
     }
-  };
-
-  // Helper to advance to next step or finish level
-  const advanceStep = () => {
-    if (currentStepIndex < activeLevel.steps.length - 1) {
-      goToStep(currentLevelNumber, currentStepIndex + 1);
-    } else {
-      completeActiveLevel();
-    }
-  };
-
-  // Finish current level and award level bonuses
-  const completeActiveLevel = () => {
-    sounds.playVictory();
-
-    // Mark completed
-    if (!completedLevels.includes(currentLevelNumber)) {
-      setCompletedLevels((prev) => [...prev, currentLevelNumber]);
-    }
-
-    // Unlock next level
-    const nextLvl = currentLevelNumber + 1;
-    if (nextLvl <= LEVELS.length && !unlockedLevels.includes(nextLvl)) {
-      setUnlockedLevels((prev) => [...prev, nextLvl]);
-    }
-
-    // Award level bonuses once
-    const levelBonusKey = `level_bonus_${currentLevelNumber}`;
-    if (!awardedQuestionKeys.includes(levelBonusKey)) {
-      let bonusTotal = 200; // Level completion bonus
-      if (!usedHintThisLevel) {
-        bonusTotal += 50; // No-hint bonus
-      }
-      if (currentLevelNumber === 5) {
-        bonusTotal += 500; // Grand Wizard 5-level bonus
-      }
-
-      setAwardedQuestionKeys((prev) => [...prev, levelBonusKey]);
-      setTotalScore((s) => s + bonusTotal);
-      setLevelPointsEarned((p) => p + bonusTotal);
-    }
-
-    // Show level completion celebratory modal
-    setIsLevelCompleteModalOpen(true);
   };
 
   // Advance to next level from the completion modal
@@ -327,7 +322,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
     if (activeStep.options) {
       setShuffledOptions(shuffleOptions(activeStep.options));
     }
-    setIsQuestionModalOpen(true);
+    setIsQuestionVisible(true);
     if (activeStep.speechText) {
       sounds.speak(activeStep.speechText);
     }
@@ -382,9 +377,6 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
 
   // Determine active house
   const activeHouse = activeStep.activeHouse || 'ones';
-  const isHundredsActive = activeHouse === 'hundreds';
-  const isTensActive = activeHouse === 'tens';
-  const isOnesActive = activeHouse === 'ones';
 
   // Highlight column on the subtraction board to visually connect with the active house
   const boardHighlightCol =
@@ -414,6 +406,7 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         onResetLevel={handleResetLevel}
         onRestartGame={handleRestartGame}
         onShowHint={handleShowHint}
+        onSwitchMode={onSwitchMode}
       />
 
       {/* Pop-up Hint Bar if requested */}
@@ -432,128 +425,14 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         </div>
       )}
 
-      {/* FULL-SCREEN HAUNTED HOUSES SCENE
-          The primary focus: occupies almost the entire viewport, clean, spacious, and uncluttered.
+      {/* ONE CONNECTED HAUNTED-HOUSE NEIGHBOURHOOD
+          The houses live together on a shared cobblestone street.
+          Questions appear automatically in cloud-shaped speech bubbles near the active house!
       */}
-      <div className="relative w-full flex-1 bg-[#140827]/95 border-2 border-purple-700/50 rounded-3xl p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col justify-between my-1">
-        {/* Atmospheric Sky Elements */}
-        <div className="absolute top-2 left-6 text-2xl sm:text-3xl select-none animate-pulse">🌕</div>
-        <div className="absolute top-5 left-28 text-sm text-purple-300/40 select-none">✨</div>
-        <div className="absolute top-4 right-24 text-sm text-purple-300/40 select-none">✨</div>
-        <div className="absolute top-3 right-8 text-lg sm:text-xl select-none animate-bounce">🦇</div>
-
-        {/* Flying Candy Bag Animation Layer */}
-        {flyingBag && (
-          <CandyBag
-            type={flyingBag.type}
-            from={flyingBag.from}
-            to={flyingBag.to}
-            label={flyingBag.label}
-          />
-        )}
-
-        {/* THREE LARGE HAUNTED HOUSES: THE MAIN ATTRACTION */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-stretch justify-items-center max-w-6xl mx-auto w-full z-10 relative flex-1">
-          {/* Hundreds House */}
-          <HauntedHouse
-            type="hundreds"
-            value={houses.hundreds.value ?? houses.hundreds.display}
-            candies={houses.hundreds.candies}
-            mood={houses.hundreds.mood}
-            label={houses.hundreds.label}
-            isActive={isHundredsActive}
-            isGiving={activeStep.bagAnimation?.from === 'hundreds' && isCorrect}
-            isReceiving={activeStep.bagAnimation?.to === 'hundreds' && isCorrect}
-            dialogue={isHundredsActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.hundreds || "Hundreds House protects 500 candies in grand vault.")}
-            speechText={isHundredsActive ? activeStep.speechText : activeStep.inactiveThoughts?.hundreds}
-            inactiveThought={activeStep.inactiveThoughts?.hundreds}
-            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'hundreds' ? askingNotice : null}
-            floatingReward={isHundredsActive ? floatingReward : null}
-            onRewardEnd={() => setFloatingReward(null)}
-            onOpenQuestionModal={() => setIsQuestionModalOpen(true)}
-            hasUnansweredQuestion={isHundredsActive && isCorrect !== true}
-          />
-
-          {/* Tens House */}
-          <HauntedHouse
-            type="tens"
-            value={houses.tens.value ?? houses.tens.display}
-            candies={houses.tens.candies}
-            mood={houses.tens.mood}
-            label={houses.tens.label}
-            isActive={isTensActive}
-            isGiving={activeStep.bagAnimation?.from === 'tens' && isCorrect}
-            isReceiving={activeStep.bagAnimation?.to === 'tens' && isCorrect}
-            dialogue={isTensActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.tens || "Tens House connects Hundreds and Ones.")}
-            speechText={isTensActive ? activeStep.speechText : activeStep.inactiveThoughts?.tens}
-            inactiveThought={activeStep.inactiveThoughts?.tens}
-            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'tens' ? askingNotice : null}
-            floatingReward={isTensActive ? floatingReward : null}
-            onRewardEnd={() => setFloatingReward(null)}
-            onOpenQuestionModal={() => setIsQuestionModalOpen(true)}
-            hasUnansweredQuestion={isTensActive && isCorrect !== true}
-          />
-
-          {/* Ones House */}
-          <HauntedHouse
-            type="ones"
-            value={houses.ones.value ?? houses.ones.display}
-            candies={houses.ones.candies}
-            mood={houses.ones.mood}
-            label={houses.ones.label}
-            isActive={isOnesActive}
-            isGiving={activeStep.bagAnimation?.from === 'ones' && isCorrect}
-            isReceiving={activeStep.bagAnimation?.to === 'ones' && isCorrect}
-            dialogue={isOnesActive ? activeStep.dialogue : (activeStep.inactiveThoughts?.ones || "Ones House gives single candies to trick-or-treaters.")}
-            speechText={isOnesActive ? activeStep.speechText : activeStep.inactiveThoughts?.ones}
-            inactiveThought={activeStep.inactiveThoughts?.ones}
-            askingNotice={askingNotice && activeStep.askingAnimation?.to === 'ones' ? askingNotice : null}
-            floatingReward={isOnesActive ? floatingReward : null}
-            onRewardEnd={() => setFloatingReward(null)}
-            onOpenQuestionModal={() => setIsQuestionModalOpen(true)}
-            hasUnansweredQuestion={isOnesActive && isCorrect !== true}
-          />
-        </div>
-
-        {/* Cobblestone Street Ground Divider */}
-        <div className="w-full h-2 bg-gradient-to-r from-amber-700 via-purple-900 to-amber-700 rounded-full my-2 border-t border-amber-400/40 shadow shrink-0" />
-
-        {/* PERSISTENT WRITTEN SUBTRACTION BOARD & TRICK-OR-TREATERS
-            Directly below the houses, showing the classroom borrowing algorithm in real time.
-        */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center shrink-0">
-          {/* Trick-or-Treaters with Candy Goal */}
-          <TrickOrTreater
-            collectedCandies={collectedCandies}
-            targetCandies={activeLevel.subtrahend}
-            isCollecting={activeStep.subtractionCol !== undefined}
-            isCelebrated={collectedCandies === activeLevel.subtrahend}
-          />
-
-          {/* Persistent Written Subtraction Board */}
-          <PlaceValueBoard
-            boardState={boardState}
-            minuend={activeLevel.minuend}
-            subtrahend={activeLevel.subtrahend}
-            diff={activeLevel.diff}
-            highlightCol={boardHighlightCol}
-            showResult={activeStep.subtractionCol === 'H' && isCorrect}
-            answers={answers}
-            onShowHint={handleShowHint}
-            onReplayStep={handleReplayStep}
-            onRestartLevel={handleResetLevel}
-          />
-        </div>
-      </div>
-
-      {/* CENTERED QUESTION POPUP MODAL
-          Dims the scene slightly behind it while keeping the houses visible.
-          Displays the 4 randomized answer choices labelled A, B, C, D.
-      */}
-      <QuestionModal
-        isOpen={isQuestionModalOpen}
-        onClose={() => setIsQuestionModalOpen(false)}
+      <ConnectedNeighbourhood
+        houses={houses}
         activeHouse={activeHouse}
+        isQuestionVisible={isQuestionVisible}
         question={activeStep.question}
         speechText={activeStep.speechText}
         dialogue={activeStep.dialogue}
@@ -562,14 +441,45 @@ export default function GamePage({ onOpenStory, onOpenPractice }) {
         isCorrect={isCorrect}
         feedback={feedback}
         onSelectOption={handleSelectOption}
-        onContinue={handleModalContinue}
+        onContinue={handleContinue}
         hint={activeStep.hint}
         onShowHint={handleShowHint}
         hintVisible={hintVisible}
-        levelNumber={currentLevelNumber}
         stepNumber={currentStepIndex + 1}
         totalSteps={activeLevel.steps.length}
+        flyingBag={flyingBag}
+        askingNotice={askingNotice}
+        floatingReward={floatingReward}
+        onRewardEnd={() => setFloatingReward(null)}
+        isIdleMode={false}
       />
+
+      {/* PERSISTENT WRITTEN SUBTRACTION BOARD & TRICK-OR-TREATERS
+          Directly below the houses, showing the classroom borrowing algorithm in real time.
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center justify-center shrink-0">
+        {/* Trick-or-Treaters with Candy Goal */}
+        <TrickOrTreater
+          collectedCandies={collectedCandies}
+          targetCandies={activeLevel.subtrahend}
+          isCollecting={activeStep.subtractionCol !== undefined}
+          isCelebrated={collectedCandies === activeLevel.subtrahend}
+        />
+
+        {/* Persistent Written Subtraction Board */}
+        <PlaceValueBoard
+          boardState={boardState}
+          minuend={activeLevel.minuend}
+          subtrahend={activeLevel.subtrahend}
+          diff={activeLevel.diff}
+          highlightCol={boardHighlightCol}
+          showResult={activeStep.subtractionCol === 'H' && isCorrect}
+          answers={answers}
+          onShowHint={handleShowHint}
+          onReplayStep={handleReplayStep}
+          onRestartLevel={handleResetLevel}
+        />
+      </div>
 
       {/* CELEBRATORY LEVEL COMPLETION & GRAND WIZARD MODAL */}
       <LevelCompleteModal

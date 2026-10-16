@@ -455,7 +455,7 @@ export default function PolotasticBorrowGame({
                   prefix={`${activeAvailable} − ${activeSubtrahend} = `}
                   suffix={activeCol.pluralName}
                   placeholder="___"
-                  helperTip={`Calculate: ${activeAvailable} − ${activeSubtrahend} = ${activeAvailable - activeSubtrahend}!`}
+                  helperTip={`In the ${activeCol.name} column, subtract ${activeSubtrahend} from ${activeAvailable}. How many ${activeCol.pluralName} remain?`}
                   showKeypad={true}
                   onSubmit={handleColAnswerSubmit}
                 />

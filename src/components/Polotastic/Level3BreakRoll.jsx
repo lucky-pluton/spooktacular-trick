@@ -304,9 +304,7 @@ export default function Level3BreakRoll({
             {/* Ones Section: Loose Polos & Takeaway (6 cols) */}
             <div className="lg:col-span-6 flex flex-col p-4 rounded-3xl bg-[#0a261d]/80 border-2 border-amber-500/50 shadow-inner min-h-[170px]">
               <div className="flex items-center justify-between w-full text-xs font-black text-amber-300 uppercase tracking-wider mb-2">
-                <span>
-                  🍬 Loose Polos ({hasBrokenRoll ? (currentProblem.ones + 10) - removedLoose : currentProblem.ones} on plate)
-                </span>
+                <span>🍬 Loose Polos</span>
                 {hasBrokenRoll && (
                   <span className="text-emerald-400 text-[10px] bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/40">
                     +10 Added from Roll
@@ -367,7 +365,7 @@ export default function Level3BreakRoll({
             {!hasBrokenRoll ? (
               <span>Initial Value: {currentProblem.tens} tens + {currentProblem.ones} ones = <strong className="text-white">{currentProblem.minuend}</strong></span>
             ) : (
-              <span>Regrouped Value: {currentProblem.tens - 1} tens ({(currentProblem.tens - 1) * 10}) + {currentProblem.ones + 10} ones = <strong className="text-white">{currentProblem.minuend}</strong> (Mathematical value NEVER changes!)</span>
+              <span>Regrouped: 1 roll exchanged for 10 loose Polos. Total value remains <strong className="text-white">{currentProblem.minuend}</strong>!</span>
             )}
           </div>
 

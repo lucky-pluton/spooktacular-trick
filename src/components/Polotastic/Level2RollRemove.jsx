@@ -187,7 +187,7 @@ export default function Level2RollRemove({
             {/* Ones Section: Loose Polos & Takeaway (5 cols) */}
             <div className="lg:col-span-5 flex flex-col p-4 rounded-3xl bg-[#0a261d]/80 border-2 border-amber-500/50 shadow-inner min-h-[170px]">
               <div className="flex items-center justify-between w-full text-xs font-black text-amber-300 uppercase tracking-wider mb-2">
-                <span>🍬 Loose Polos ({currentProblem.ones - removedLoose} left)</span>
+                <span>🍬 Loose Polos</span>
                 <span className="text-amber-400 text-[10px]">Tap to takeaway</span>
               </div>
 
@@ -241,9 +241,9 @@ export default function Level2RollRemove({
           <div className="p-3 bg-[#031d16] border border-emerald-400/60 rounded-2xl flex flex-wrap items-center justify-center gap-4 text-xs font-mono font-bold text-emerald-200">
             <span>Tens: {currentProblem.tens} rolls = <strong className="text-white">{currentProblem.tens * 10}</strong></span>
             <span>+</span>
-            <span>Ones: {currentProblem.ones} − {removedLoose} = <strong className="text-white">{currentProblem.ones - removedLoose}</strong></span>
+            <span>Ones: {currentProblem.ones} − {removedLoose}</span>
             <span>=</span>
-            <span>Total Value: <strong className="text-amber-300 text-sm">{currentProblem.tens * 10 + (currentProblem.ones - removedLoose)}</strong></span>
+            <span>Total Value: <strong className="text-amber-300 text-sm">{feedback?.isCorrect ? currentProblem.diff : '?'}</strong></span>
           </div>
 
           {/* Direct Answer Typing Section (Replaces All Multiple Choice Buttons) */}
@@ -257,7 +257,7 @@ export default function Level2RollRemove({
               targetValue={currentProblem.diff}
               prefix={`${currentProblem.minuend} − ${currentProblem.subtrahend} = `}
               placeholder="___"
-              helperTip={`Keep the ${currentProblem.tens} rolls (${currentProblem.tens * 10}) intact! Just subtract the ones: ${currentProblem.ones} − ${currentProblem.subtrahend} = ${currentProblem.ones - currentProblem.subtrahend}. Add them together!`}
+              helperTip={`Keep the ${currentProblem.tens} rolls (${currentProblem.tens * 10}) intact. Subtract ${currentProblem.subtrahend} loose Polos from the ones, then add the tens and ones together.`}
               showKeypad={true}
               disabled={feedback?.isCorrect}
               onSubmit={handleAnswerSubmit}

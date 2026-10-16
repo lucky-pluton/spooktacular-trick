@@ -75,9 +75,9 @@ export default function Guidebook({
               )}
             </div>
 
-            {/* Value Readout */}
-            <div className="mt-3 text-lg font-black text-emerald-300 font-mono">
-              Total Value: <span className="text-white text-xl">{interactivePoloCount}</span> one{interactivePoloCount === 1 ? '' : 's'}
+            {/* Prompt Readout without giving answer */}
+            <div className="mt-3 text-sm font-black text-emerald-300 font-mono">
+              Plate Status: <span className="text-white">Count each loose Polo</span>
             </div>
           </div>
 
@@ -123,7 +123,7 @@ export default function Guidebook({
               prefix="Polos = "
               suffix="ones"
               placeholder="?"
-              helperTip={`Count carefully: there are ${interactivePoloCount} Polos on the plate!`}
+              helperTip="Count each single Polo on the plate from left to right."
               showKeypad={false}
             />
           </div>
@@ -140,7 +140,7 @@ export default function Guidebook({
       badge: 'Unit 2 • The Ten',
       unitName: '10 Polos = 1 Roll = 1 Ten',
       pipMood: 'guiding',
-      speech: 'When you collect exactly 10 individual Polos, something magical happens! They group together to form 1 Roll. Type 10 below to bundle the roll!',
+      speech: 'When you collect enough individual Polos, they group together to form 1 Roll! How many loose Polos make 1 roll? Type your answer below to bundle!',
       renderContent: () => (
         <div className="flex flex-col items-center gap-5 w-full">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#031d16]/70 border-2 border-emerald-500/50 rounded-3xl w-full max-w-2xl shadow-inner min-h-[200px]">
@@ -207,7 +207,7 @@ export default function Guidebook({
               prefix="1 roll = "
               suffix="individual Polos"
               placeholder="___"
-              helperTip="Count the 10 loose Polos! 1 roll equals 10 ones."
+              helperTip="Count the individual Polos shown on the left to see how many make a full roll."
               showKeypad={false}
               onSubmit={({ isCorrect }) => {
                 if (isCorrect) {
@@ -274,7 +274,7 @@ export default function Guidebook({
               prefix="1 packet = "
               suffix="individual Polos"
               placeholder="___"
-              helperTip="10 rolls × 10 Polos per roll = 100 Polos!"
+              helperTip="Count by tens across the 10 rolls to find how many Polos fit into 1 packet."
               showKeypad={false}
             />
           </div>
@@ -335,7 +335,7 @@ export default function Guidebook({
               prefix="1 carton = "
               suffix="individual Polos"
               placeholder="___"
-              helperTip="10 packets × 100 Polos = 1,000 Polos! Type 1000."
+              helperTip="Count by hundreds across the 10 packets to find how many Polos fit into a delivery carton."
               showKeypad={false}
             />
           </div>
@@ -370,21 +370,24 @@ export default function Guidebook({
             prefix: '1 roll = ',
             suffix: 'individual Polos',
             targetValue: 10,
-            tip: '1 roll is 1 ten. 10 individual Polos = 1 Roll!',
+            tip: 'Think about how many single units group together to make 1 ten.',
+            successText: '10 individual Polos = 1 Roll!',
           },
           {
             q: 'How many individual Polos are in 1 packet (10 rolls)?',
             prefix: '1 packet = ',
             suffix: 'loose Polos',
             targetValue: 100,
-            tip: '10 rolls of 10 Polos = 100 Polos = 1 Packet!',
+            tip: 'Count by tens across 10 rolls to find how many Polos are in 1 packet.',
+            successText: '10 rolls of 10 = 100 Polos = 1 Packet!',
           },
           {
             q: 'How many loose Polos are in 1 delivery carton (10 packets)?',
             prefix: '1 carton = ',
             suffix: 'loose Polos',
             targetValue: [1000, '1000', '1,000'],
-            tip: '10 packets of 100 Polos = 1,000 Polos! Type 1000.',
+            tip: 'Count by hundreds across 10 packets to find how many Polos are in 1 carton.',
+            successText: '10 packets of 100 = 1,000 Polos = 1 Carton!',
           },
         ];
 
@@ -416,9 +419,9 @@ export default function Guidebook({
                     onSubmit={({ isCorrect }) => {
                       if (isCorrect) {
                         setQuizScore((s) => s + 1);
-                        setQuizFeedback({ correct: true, tip: curQ.tip });
+                        setQuizFeedback({ correct: true, text: curQ.successText });
                       } else {
-                        setQuizFeedback({ correct: false, tip: curQ.tip });
+                        setQuizFeedback({ correct: false, text: curQ.tip });
                       }
                     }}
                   />
@@ -427,7 +430,7 @@ export default function Guidebook({
                 {/* Feedback & Advance Button */}
                 {quizFeedback && quizFeedback.correct && (
                   <div className="p-3.5 rounded-2xl text-xs font-semibold flex flex-col gap-2 animate-fadeIn bg-emerald-500/20 border border-emerald-400 text-emerald-200">
-                    <p className="font-bold text-white">🎉 {quizFeedback.tip}</p>
+                    <p className="font-bold text-white">🎉 {quizFeedback.text}</p>
                     <button
                       onClick={() => {
                         sounds.playPop();

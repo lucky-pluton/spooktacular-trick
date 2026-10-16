@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, ArrowRight, RotateCcw, Printer, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw, Printer, AlertCircle, HelpCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { generateQuestionForLevel } from '../../data/polotasticQuestions';
+import { POLOTASTIC_LEVELS } from './polotasticStorage';
 import { sounds } from '../../audio/soundEffects';
 
 /**
@@ -13,6 +14,8 @@ import { sounds } from '../../audio/soundEffects';
  * - Regrouping annotations row above digits with strikethroughs and pencil marks
  * - Step-by-step intermediate regrouping for borrowing across zero (e.g. 500 − 36, 4,000 − 1,256)
  * - Direct digit typing below subtraction line (zero MCQs)
+ * - Explicit worked solution toggle (answers hidden until requested or earned)
+ * - Single authoritative level configuration (Levels 1-9 without duplication)
  * - Printable worksheet option
  */
 export default function PolotasticNotebook({
@@ -43,6 +46,9 @@ export default function PolotasticNotebook({
   const [isProblemComplete, setIsProblemComplete] = useState(false);
   const [problemsSolved, setProblemsSolved] = useState(0);
 
+  // Explicit Worked Solution visibility state (hidden by default)
+  const [showWorkedSolution, setShowWorkedSolution] = useState(false);
+
   // Printable worksheet modal state
   const [showPrintModal, setShowPrintModal] = useState(false);
 
@@ -59,12 +65,31 @@ export default function PolotasticNotebook({
     setTypedInput('');
     setInputError(null);
     setIsProblemComplete(false);
+    setShowWorkedSolution(false);
     sounds.playPop();
   };
 
   const handleLevelChange = (lvl) => {
     setSelectedLevel(lvl);
     loadNewProblem(lvl);
+  };
+
+  const handlePreviousLevel = () => {
+    if (selectedLevel > 1) {
+      const prevLvl = selectedLevel - 1;
+      if (unlockedLevels.includes(prevLvl)) {
+        handleLevelChange(prevLvl);
+      }
+    }
+  };
+
+  const handleNextLevel = () => {
+    if (selectedLevel < 9) {
+      const nextLvl = selectedLevel + 1;
+      if (unlockedLevels.includes(nextLvl)) {
+        handleLevelChange(nextLvl);
+      }
+    }
   };
 
   const currentStep = currentProblem.intermediateSteps[currentStepIdx];
@@ -82,8 +107,7 @@ export default function PolotasticNotebook({
     }
 
     if (currentStep.type === 'exchange') {
-      // Step expects the child to verify the new unbundled value (or donor remaining value)
-      // Accept either the new count in toCol or just confirm the regrouping
+      // Step expects the child to calculate the new unbundled value in toCol
       const expectedValue = currentStep.afterDigits[currentStep.toCol];
       const parsedNum = Number(trimmed);
 
@@ -109,7 +133,7 @@ export default function PolotasticNotebook({
         advanceStep(currentStepIdx + 1);
       } else {
         sounds.playIncorrect();
-        setInputError(`Remember: 1 ${currentStep.fromUnit} becomes 10 ${currentStep.toUnit}s! So ${currentStep.beforeDigits[currentStep.toCol]} + 10 = ${expectedValue}.`);
+        setInputError(`Remember: 1 ${currentStep.fromUnit} exchanges for 10 ${currentStep.toUnit}s! Add 10 to the ${currentStep.beforeDigits[currentStep.toCol]} ${currentStep.toUnit}s in this column.`);
       }
     } else if (currentStep.type === 'subtract') {
       const expectedDiff = currentStep.remaining;
@@ -129,7 +153,7 @@ export default function PolotasticNotebook({
         advanceStep(currentStepIdx + 1);
       } else {
         sounds.playIncorrect();
-        setInputError(`Check your subtraction: ${currentStep.available} − ${currentStep.subtracting} = ? Count carefully!`);
+        setInputError(`In the ${currentProblem.columns[currentStep.col]?.name || ''} column, subtract ${currentStep.subtracting} from ${currentStep.available}. Take your time and recount!`);
       }
     }
   };
@@ -171,29 +195,67 @@ export default function PolotasticNotebook({
           <span>Polotastic Hub</span>
         </button>
 
-        {/* Level Selector Dropdown */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-black text-amber-300 uppercase tracking-wider hidden sm:inline">
-            Notebook Level:
-          </span>
-          <select
-            value={selectedLevel}
-            onChange={(e) => handleLevelChange(Number(e.target.value))}
-            className="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-500/60 text-emerald-200 text-xs font-bold cursor-pointer outline-none"
+        {/* Level Navigation & Distinct Level Selector */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <button
+            onClick={handlePreviousLevel}
+            disabled={selectedLevel <= 1 || !unlockedLevels.includes(selectedLevel - 1)}
+            type="button"
+            className="px-2.5 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-1"
+            title="Go to preceding distinct level"
           >
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => {
-              const isUnlocked = unlockedLevels.includes(lvl);
-              return (
-                <option key={lvl} value={lvl} disabled={!isUnlocked}>
-                  Level {lvl}: {isUnlocked ? `Level ${lvl}` : `Level ${lvl} (Locked)`}
-                </option>
-              );
-            })}
-          </select>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Previous Level</span>
+          </button>
+
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-black text-amber-300 uppercase tracking-wider hidden sm:inline">
+              Level:
+            </span>
+            <select
+              value={selectedLevel}
+              onChange={(e) => handleLevelChange(Number(e.target.value))}
+              className="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-500/60 text-emerald-200 text-xs font-bold cursor-pointer outline-none"
+            >
+              {POLOTASTIC_LEVELS.map((lvl) => {
+                const isUnlocked = unlockedLevels.includes(lvl.levelNumber);
+                return (
+                  <option key={lvl.id} value={lvl.levelNumber} disabled={!isUnlocked}>
+                    {lvl.title} {isUnlocked ? '' : '(Locked)'}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          <button
+            onClick={handleNextLevel}
+            disabled={selectedLevel >= 9 || !unlockedLevels.includes(selectedLevel + 1)}
+            type="button"
+            className="px-2.5 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-300 text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center gap-1"
+            title="Go to next distinct level"
+          >
+            <span className="hidden md:inline">Next Level</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Action Buttons: Print Worksheet & New Question */}
+        {/* Action Buttons: Solution Reveal, Print Worksheet & New Question */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowWorkedSolution((prev) => !prev)}
+            type="button"
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 cursor-pointer transition-all ${
+              showWorkedSolution
+                ? 'bg-amber-400 text-black border-amber-300 font-black shadow-[0_0_15px_rgba(251,191,36,0.6)]'
+                : 'bg-emerald-900/60 hover:bg-emerald-800 border-emerald-500/40 text-emerald-200'
+            }`}
+            title="Reveal complete step-by-step worked solution"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-amber-300" />
+            <span className="hidden sm:inline">{showWorkedSolution ? 'Hide Solution' : 'Worked Solution'}</span>
+          </button>
+
           <button
             onClick={() => setShowPrintModal(true)}
             type="button"
@@ -378,18 +440,62 @@ export default function PolotasticNotebook({
                 <p className="text-xs text-gray-600">
                   Calculation completed with verified regrouping working!
                 </p>
-                <button
-                  onClick={() => loadNewProblem()}
-                  type="button"
-                  className="mt-2 px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs transition-all shadow cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>Solve Another in Copybook</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+                  <button
+                    onClick={() => loadNewProblem()}
+                    type="button"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs transition-all shadow cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Practice Another</span>
+                  </button>
+                  {selectedLevel < 9 && unlockedLevels.includes(selectedLevel + 1) && (
+                    <button
+                      onClick={handleNextLevel}
+                      type="button"
+                      className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs transition-all shadow cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Next Level ({selectedLevel + 1})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Explicitly Requested Worked Solution Panel */}
+        {showWorkedSolution && (
+          <div className="relative z-10 pl-10 sm:pl-16 mt-4 max-w-xl mx-auto animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-amber-50/95 border-2 border-amber-400 text-amber-950 text-xs font-mono shadow-md">
+              <div className="flex items-center justify-between font-black text-sm uppercase tracking-wider text-amber-900 border-b border-amber-300 pb-1.5 mb-2">
+                <span>📖 Worked Solution (Step-by-Step)</span>
+                <span className="text-[10px] text-amber-700 font-sans">Full Mathematical Working</span>
+              </div>
+              <p className="font-bold text-gray-800 mb-2">
+                Problem: {currentProblem.minuend.toLocaleString()} − {currentProblem.subtrahend.toLocaleString()} = <strong className="text-emerald-800 text-sm">{currentProblem.diff.toLocaleString()}</strong>
+              </p>
+              <div className="flex flex-col gap-1.5 text-xs text-gray-700">
+                {currentProblem.intermediateSteps.map((st, idx) => (
+                  <div key={idx} className="p-1.5 rounded bg-amber-100/70 border border-amber-200">
+                    <strong className="text-amber-900">Step {idx + 1}:</strong>{' '}
+                    <span>{st.workedSolution || st.description}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-amber-300 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowWorkedSolution(false)}
+                  className="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-black text-[11px] cursor-pointer shadow"
+                >
+                  Hide Solution
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PRINTABLE WORKSHEET MODAL */}

@@ -167,7 +167,7 @@ export default function Level1Takeaway({
             {/* Left: The Plate with Remaining Polos */}
             <div className="flex flex-col items-center p-4 rounded-3xl bg-[#031d16]/80 border-2 border-emerald-500/50 shadow-inner min-h-[170px] justify-between">
               <div className="flex items-center justify-between w-full text-xs font-black text-emerald-300 uppercase tracking-wider mb-2">
-                <span>🍽️ The Plate ({currentProblem.minuend - removedCount} Polos left)</span>
+                <span>🍽️ The Plate</span>
                 <span className="text-emerald-400 text-[10px]">Tap to takeaway</span>
               </div>
 
@@ -196,7 +196,7 @@ export default function Level1Takeaway({
               </div>
 
               <span className="text-[11px] text-emerald-300/80 font-medium">
-                {currentProblem.minuend - removedCount} Polos remaining on plate
+                {feedback?.isCorrect ? `${currentProblem.diff} Polos remaining` : 'Count the remaining Polos on the plate'}
               </span>
             </div>
 

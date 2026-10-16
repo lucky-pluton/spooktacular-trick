@@ -29,8 +29,8 @@ if (!isValid) {
 }
 console.log('   ✓ Generator self-validation passed 100%.');
 
-// 3. Deep test Level 1 (Single-digit, no borrowing)
-console.log('3. Testing Level 1 (Single-Digit Subtraction Without Borrowing)...');
+// 3. Deep test Level 1 (Single-digit, no borrowing, direct typing)
+console.log('3. Testing Level 1 (Single-Digit Subtraction Without Borrowing - Direct Typing)...');
 for (let i = 0; i < 150; i++) {
   const q = generateLevel1Question();
   if (q.minuend < 1 || q.minuend > 9) {
@@ -42,14 +42,20 @@ for (let i = 0; i < 150; i++) {
   if (q.minuend - q.subtrahend !== q.diff) {
     throw new Error(`Level 1 math error: ${q.minuend} - ${q.subtrahend} !== ${q.diff}`);
   }
+  if (q.targetValue !== q.diff) {
+    throw new Error(`Level 1 targetValue ${q.targetValue} !== diff ${q.diff}`);
+  }
+  if (q.choices !== undefined) {
+    throw new Error('Level 1 still has MCQ choices array!');
+  }
   if (q.requiresBorrowing !== false) {
     throw new Error('Level 1 question improperly flagged requiresBorrowing!');
   }
 }
-console.log('   ✓ 150 Level 1 questions verified (0 borrowing, 100% mathematically sound).');
+console.log('   ✓ 150 Level 1 questions verified (0 borrowing, direct typing targetValue, 100% mathematically sound).');
 
-// 4. Deep test Level 2 (Two-digit minus one-digit without borrowing)
-console.log('4. Testing Level 2 (Two-Digit Minus One-Digit Without Borrowing)...');
+// 4. Deep test Level 2 (Two-digit minus one-digit without borrowing - Direct Typing)
+console.log('4. Testing Level 2 (Two-Digit Minus One-Digit Without Borrowing - Direct Typing)...');
 for (let i = 0; i < 150; i++) {
   const q = generateLevel2Question();
   if (q.minuend < 10 || q.minuend > 99) {
@@ -61,14 +67,20 @@ for (let i = 0; i < 150; i++) {
   if (q.minuend - q.subtrahend !== q.diff) {
     throw new Error(`Level 2 math error: ${q.minuend} - ${q.subtrahend} !== ${q.diff}`);
   }
+  if (q.targetValue !== q.diff) {
+    throw new Error(`Level 2 targetValue ${q.targetValue} !== diff ${q.diff}`);
+  }
+  if (q.choices !== undefined) {
+    throw new Error('Level 2 still has MCQ choices array!');
+  }
   if (q.remainingRolls !== q.tens) {
     throw new Error('Level 2 rolls changed when they should stay intact!');
   }
 }
-console.log('   ✓ 150 Level 2 questions verified (tens rolls intact, 0 borrowing, 100% accurate).');
+console.log('   ✓ 150 Level 2 questions verified (tens rolls intact, 0 borrowing, direct typing targetValue, 100% accurate).');
 
-// 5. Deep test Level 3 (Two-digit minus one-digit WITH borrowing)
-console.log('5. Testing Level 3 (Two-Digit Minus One-Digit With Borrowing)...');
+// 5. Deep test Level 3 (Two-digit minus one-digit WITH borrowing - Multi-Step Typed Validation)
+console.log('5. Testing Level 3 (Two-Digit Minus One-Digit With Borrowing - Multi-Step Typing)...');
 for (let i = 0; i < 150; i++) {
   const q = generateLevel3Question();
   if (q.ones >= q.subtrahend) {
@@ -80,6 +92,19 @@ for (let i = 0; i < 150; i++) {
   if (q.afterBorrowLoosePolos !== q.ones + 10) {
     throw new Error('Level 3 afterBorrowLoosePolos not incremented by 10 ones!');
   }
+  // Check Step 1, Step 2, and Step 3 targets for typed validation
+  if (q.step1Target !== q.ones + 10) {
+    throw new Error(`Level 3 step1Target ${q.step1Target} !== ${q.ones + 10}`);
+  }
+  if (q.step2Target !== (q.ones + 10) - q.subtrahend) {
+    throw new Error(`Level 3 step2Target ${q.step2Target} !== ${(q.ones + 10) - q.subtrahend}`);
+  }
+  if (q.step3Target !== q.diff) {
+    throw new Error(`Level 3 step3Target ${q.step3Target} !== ${q.diff}`);
+  }
+  if (q.choices !== undefined) {
+    throw new Error('Level 3 still has MCQ choices array!');
+  }
   // Check conservation of value
   const regroupedVal = q.afterBorrowRolls * 10 + q.afterBorrowLoosePolos;
   if (regroupedVal !== q.minuend) {
@@ -90,23 +115,25 @@ for (let i = 0; i < 150; i++) {
     throw new Error(`Final result ${finalVal} does not equal difference ${q.diff}!`);
   }
 }
-console.log('   ✓ 150 Level 3 questions verified (borrowing physically decomposes 1 ten to 10 ones with total value strictly preserved).');
+console.log('   ✓ 150 Level 3 questions verified (step 1, 2, 3 targets validated, value strictly preserved).');
 
-// 6. Test Polo Dash Course
-console.log('6. Testing Polo Dash Course Structure...');
+// 6. Test Polo Dash Course (Direct typing obstacles)
+console.log('6. Testing Polo Dash Course Structure (Direct Typing)...');
 const course = generatePoloDashCourse();
 if (course.length < 5) {
   throw new Error(`Polo Dash course length too short: ${course.length}`);
 }
 course.forEach((obs, idx) => {
-  const correctOpts = obs.options.filter((o) => o.isCorrect);
-  if (correctOpts.length !== 1) {
-    throw new Error(`Obstacle #${idx} does not have exactly 1 correct answer!`);
+  if (obs.targetValue === undefined) {
+    throw new Error(`Obstacle #${idx} missing targetValue!`);
   }
-  if (obs.options.length !== 3) {
-    throw new Error(`Obstacle #${idx} must have 3 lanes/options.`);
+  if (!obs.equationPrompt) {
+    throw new Error(`Obstacle #${idx} missing equationPrompt!`);
+  }
+  if (obs.options !== undefined) {
+    throw new Error(`Obstacle #${idx} still has MCQ options array!`);
   }
 });
-console.log(`   ✓ Polo Dash course has ${course.length} valid obstacle checkpoints with 3-lane options.`);
+console.log(`   ✓ Polo Dash course has ${course.length} valid direct-typing obstacle checkpoints (0 MCQs).`);
 
-console.log('\n🎉 ALL POLOTASTIC VERIFICATION CHECKS PASSED SUCCESSFULLY! 🎉\n');
+console.log('\n🎉 ALL POLOTASTIC VERIFICATION CHECKS PASSED SUCCESSFULLY! ZERO MCQs CONFIRMED! 🎉\n');

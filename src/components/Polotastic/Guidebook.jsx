@@ -6,6 +6,7 @@ import PoloRoll from './PoloRoll';
 import PoloPacket from './PoloPacket';
 import PoloCarton from './PoloCarton';
 import PipCharacter from './PipCharacter';
+import PoloAnswerInput from './PoloAnswerInput';
 import { sounds } from '../../audio/soundEffects';
 
 /**
@@ -15,7 +16,7 @@ import { sounds } from '../../audio/soundEffects';
  * 2. Tens: 10 Polos = 1 Roll = 1 ten
  * 3. Hundreds: 10 Rolls = 1 Packet = 100 ones
  * 4. Thousands: 10 Packets = 1 Carton = 1,000 ones
- * 5. Interactive Practice & Knowledge Check
+ * 5. Direct-Entry Knowledge Check: ALL questions require typing (zero MCQs).
  */
 export default function Guidebook({
   onComplete,
@@ -26,7 +27,7 @@ export default function Guidebook({
   const [animState, setAnimState] = useState('idle'); // 'idle' | 'bundling' | 'bundled' | 'unbundling'
   const [interactivePoloCount, setInteractivePoloCount] = useState(5);
   
-  // Knowledge Check State
+  // Knowledge Check State (Direct typing questions)
   const [quizStep, setQuizStep] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
   const [quizFeedback, setQuizFeedback] = useState(null);
@@ -47,7 +48,7 @@ export default function Guidebook({
       badge: 'Unit 1 • The One',
       unitName: '1 Polo = 1 One',
       pipMood: 'waving',
-      speech: 'Meet the single Polo! Just like a single digit, one Polo counts as one. Tap the plus and minus buttons to add or remove Polos!',
+      speech: 'Meet the single Polo! Just like a single digit, one Polo counts as one. Tap the buttons to add or remove Polos, then type your count below!',
       renderContent: () => (
         <div className="flex flex-col items-center gap-5 w-full">
           {/* Main Visual Display */}
@@ -111,8 +112,24 @@ export default function Guidebook({
             </button>
           </div>
 
+          {/* Direct typing exercise for Chapter 1 */}
+          <div className="w-full max-w-sm mt-1 p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl flex flex-col items-center gap-2">
+            <span className="text-xs font-black text-emerald-300 uppercase tracking-wider text-center">
+              Type the number of Polos currently on the plate:
+            </span>
+            <PoloAnswerInput
+              key={`c1_${interactivePoloCount}`}
+              targetValue={interactivePoloCount}
+              prefix="Polos = "
+              suffix="ones"
+              placeholder="?"
+              helperTip={`Count carefully: there are ${interactivePoloCount} Polos on the plate!`}
+              showKeypad={false}
+            />
+          </div>
+
           <p className="text-xs text-emerald-200/80 text-center max-w-sm">
-            💡 Notice: As long as you have between 1 and 9 Polos, they remain loose individual units!
+            💡 Notice: Between 1 and 9 Polos, they remain loose individual units!
           </p>
         </div>
       ),
@@ -123,7 +140,7 @@ export default function Guidebook({
       badge: 'Unit 2 • The Ten',
       unitName: '10 Polos = 1 Roll = 1 Ten',
       pipMood: 'guiding',
-      speech: 'When you collect exactly 10 individual Polos, something magical happens! They group together to form 1 Roll. 10 ones is exactly equal to 1 ten!',
+      speech: 'When you collect exactly 10 individual Polos, something magical happens! They group together to form 1 Roll. Type 10 below to bundle the roll!',
       renderContent: () => (
         <div className="flex flex-col items-center gap-5 w-full">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 p-6 bg-[#031d16]/70 border-2 border-emerald-500/50 rounded-3xl w-full max-w-2xl shadow-inner min-h-[200px]">
@@ -180,6 +197,27 @@ export default function Guidebook({
             </div>
           </div>
 
+          {/* Direct typing equation for Chapter 2 */}
+          <div className="w-full max-w-md p-3.5 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl flex flex-col items-center gap-2">
+            <span className="text-xs font-black text-emerald-300 uppercase tracking-wider text-center">
+              How many loose Polos make 1 roll? Type the number to bundle:
+            </span>
+            <PoloAnswerInput
+              targetValue={10}
+              prefix="1 roll = "
+              suffix="individual Polos"
+              placeholder="___"
+              helperTip="Count the 10 loose Polos! 1 roll equals 10 ones."
+              showKeypad={false}
+              onSubmit={({ isCorrect }) => {
+                if (isCorrect) {
+                  setAnimState('bundling');
+                  setTimeout(() => setAnimState('bundled'), 600);
+                }
+              }}
+            />
+          </div>
+
           <div className="p-3 bg-emerald-950/90 border border-emerald-400/60 rounded-2xl max-w-lg text-center text-xs text-emerald-200">
             <strong className="text-white">The Golden Place-Value Rule:</strong> Exchanging 10 loose Polos for 1 roll does NOT change the total number of candies! You still have 10 Polos.
           </div>
@@ -192,7 +230,7 @@ export default function Guidebook({
       badge: 'Unit 3 • The Hundred',
       unitName: '10 Rolls = 1 Packet = 100 Ones',
       pipMood: 'happy',
-      speech: 'What if you collect 10 rolls? Ten rolls of 10 Polos make 100 Polos! We pack them into 1 Packet. 1 Packet = 10 tens = 100 ones!',
+      speech: 'What if you collect 10 rolls? Ten rolls of 10 Polos make 100 Polos! We pack them into 1 Packet. Type the missing values below!',
       renderContent: () => (
         <div className="flex flex-col items-center gap-5 w-full">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 p-6 bg-[#031d16]/70 border-2 border-emerald-500/50 rounded-3xl w-full max-w-2xl shadow-inner">
@@ -224,6 +262,21 @@ export default function Guidebook({
             <div className="flex flex-col items-center gap-1.5">
               <PoloPacket showContents={true} />
             </div>
+          </div>
+
+          {/* Direct typing equation for Chapter 3 */}
+          <div className="w-full max-w-md p-3.5 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl flex flex-col items-center gap-2">
+            <span className="text-xs font-black text-emerald-300 uppercase tracking-wider text-center">
+              Complete the equation for 1 Packet:
+            </span>
+            <PoloAnswerInput
+              targetValue={100}
+              prefix="1 packet = "
+              suffix="individual Polos"
+              placeholder="___"
+              helperTip="10 rolls × 10 Polos per roll = 100 Polos!"
+              showKeypad={false}
+            />
           </div>
 
           <div className="p-3 bg-emerald-950/90 border border-emerald-400/60 rounded-2xl max-w-lg text-center text-xs text-emerald-200">
@@ -272,6 +325,21 @@ export default function Guidebook({
             </div>
           </div>
 
+          {/* Direct typing equation for Chapter 4 */}
+          <div className="w-full max-w-md p-3.5 bg-[#031d24]/90 border border-cyan-500/50 rounded-2xl flex flex-col items-center gap-2">
+            <span className="text-xs font-black text-cyan-300 uppercase tracking-wider text-center">
+              Complete the equation for 1 Carton:
+            </span>
+            <PoloAnswerInput
+              targetValue={[1000, '1000', '1,000']}
+              prefix="1 carton = "
+              suffix="individual Polos"
+              placeholder="___"
+              helperTip="10 packets × 100 Polos = 1,000 Polos! Type 1000."
+              showKeypad={false}
+            />
+          </div>
+
           {/* Place Value Master Table */}
           <div className="w-full max-w-lg bg-emerald-950/90 border border-emerald-500/60 rounded-2xl p-3 text-center text-xs">
             <span className="font-black text-amber-300 uppercase tracking-wider block mb-1.5">
@@ -293,32 +361,30 @@ export default function Guidebook({
       badge: 'Completion Exercise',
       unitName: 'Prove Your Place-Value Mastery',
       pipMood: 'thinking',
-      speech: 'Time to put your place-value skills to the test! Answer these 3 quick questions to complete the Guidebook and unlock Polo Dash!',
+      speech: 'Time to put your place-value skills to the test! Type the correct numbers to complete the Guidebook and unlock Polo Dash!',
       renderContent: () => {
+        // Direct-typing questions (ZERO multiple-choice options)
         const quizQuestions = [
           {
             q: 'How many individual Polos make exactly 1 roll?',
-            options: [
-              { text: '5 Polos', correct: false, tip: '5 is only half a roll. 1 roll is 1 ten!' },
-              { text: '10 Polos', correct: true, tip: 'Spot on! 10 individual Polos = 1 Roll (One Ten).' },
-              { text: '100 Polos', correct: false, tip: '100 Polos makes a whole packet!' },
-            ],
+            prefix: '1 roll = ',
+            suffix: 'individual Polos',
+            targetValue: 10,
+            tip: '1 roll is 1 ten. 10 individual Polos = 1 Roll!',
           },
           {
-            q: 'Which represents 100 Polos?',
-            options: [
-              { text: '1 Roll', correct: false, tip: '1 roll is 10 Polos.' },
-              { text: '1 Packet (10 Rolls)', correct: true, tip: 'Perfect! 10 rolls of 10 make 100 Polos = 1 Packet!' },
-              { text: '1 Carton', correct: false, tip: '1 carton is 1,000 Polos.' },
-            ],
+            q: 'How many individual Polos are in 1 packet (10 rolls)?',
+            prefix: '1 packet = ',
+            suffix: 'loose Polos',
+            targetValue: 100,
+            tip: '10 rolls of 10 Polos = 100 Polos = 1 Packet!',
           },
           {
-            q: 'If you exchange 1 roll for 10 individual Polos, does the total value change?',
-            options: [
-              { text: 'No, it still equals 10!', correct: true, tip: 'Brilliant! Regrouping changes the shape, but NEVER the mathematical value!' },
-              { text: 'Yes, it becomes smaller', correct: false, tip: '1 roll and 10 loose Polos both equal 10!' },
-              { text: 'Yes, it becomes bigger', correct: false, tip: 'Value stays identical: 1 ten = 10 ones!' },
-            ],
+            q: 'How many loose Polos are in 1 delivery carton (10 packets)?',
+            prefix: '1 carton = ',
+            suffix: 'loose Polos',
+            targetValue: [1000, '1000', '1,000'],
+            tip: '10 packets of 100 Polos = 1,000 Polos! Type 1000.',
           },
         ];
 
@@ -330,55 +396,38 @@ export default function Guidebook({
               <div className="w-full bg-[#031d16]/80 border-2 border-emerald-500/60 rounded-3xl p-5 sm:p-6 shadow-inner flex flex-col gap-4">
                 <div className="flex items-center justify-between text-xs font-black text-emerald-400 uppercase">
                   <span>Question {quizStep + 1} of 3</span>
-                  <span>Score: {quizScore}</span>
+                  <span>Mastery Score: {quizScore}</span>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-black text-white text-center leading-snug">
                   {curQ.q}
                 </h3>
 
-                {/* Option Buttons */}
-                <div className="flex flex-col gap-2.5 mt-2">
-                  {curQ.options.map((opt, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        if (quizFeedback !== null) return;
-                        if (opt.correct) {
-                          sounds.playSuccess();
-                          setQuizScore((s) => s + 1);
-                          setQuizFeedback({ correct: true, tip: opt.tip });
-                        } else {
-                          sounds.playIncorrect();
-                          setQuizFeedback({ correct: false, tip: opt.tip });
-                        }
-                      }}
-                      disabled={quizFeedback !== null}
-                      type="button"
-                      className={`p-3.5 rounded-2xl border-2 text-left text-sm font-bold transition-all cursor-pointer flex items-center justify-between ${
-                        quizFeedback !== null && opt.correct
-                          ? 'bg-emerald-500/30 border-emerald-400 text-white'
-                          : quizFeedback !== null && !opt.correct
-                          ? 'bg-emerald-950/40 border-emerald-800/40 text-gray-400'
-                          : 'bg-emerald-950/70 hover:bg-emerald-900 border-emerald-600/60 hover:border-emerald-400 text-emerald-100 hover:scale-[1.01]'
-                      }`}
-                    >
-                      <span>{opt.text}</span>
-                      {quizFeedback !== null && opt.correct && (
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      )}
-                    </button>
-                  ))}
+                {/* Direct Typing Input Box (Replaces all MCQs) */}
+                <div className="py-2">
+                  <PoloAnswerInput
+                    key={`guide_quiz_${quizStep}`}
+                    targetValue={curQ.targetValue}
+                    prefix={curQ.prefix}
+                    suffix={curQ.suffix}
+                    placeholder="___"
+                    helperTip={curQ.tip}
+                    showKeypad={true}
+                    onSubmit={({ isCorrect }) => {
+                      if (isCorrect) {
+                        setQuizScore((s) => s + 1);
+                        setQuizFeedback({ correct: true, tip: curQ.tip });
+                      } else {
+                        setQuizFeedback({ correct: false, tip: curQ.tip });
+                      }
+                    }}
+                  />
                 </div>
 
-                {/* Feedback & Next Button */}
-                {quizFeedback && (
-                  <div className={`p-3 rounded-2xl text-xs font-semibold flex flex-col gap-2 animate-fadeIn ${
-                    quizFeedback.correct
-                      ? 'bg-emerald-500/20 border border-emerald-400 text-emerald-200'
-                      : 'bg-amber-500/20 border border-amber-400 text-amber-200'
-                  }`}>
-                    <p>{quizFeedback.tip}</p>
+                {/* Feedback & Advance Button */}
+                {quizFeedback && quizFeedback.correct && (
+                  <div className="p-3.5 rounded-2xl text-xs font-semibold flex flex-col gap-2 animate-fadeIn bg-emerald-500/20 border border-emerald-400 text-emerald-200">
+                    <p className="font-bold text-white">🎉 {quizFeedback.tip}</p>
                     <button
                       onClick={() => {
                         sounds.playPop();
@@ -386,9 +435,9 @@ export default function Guidebook({
                         setQuizStep((s) => s + 1);
                       }}
                       type="button"
-                      className="self-end px-4 py-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs transition-colors cursor-pointer"
+                      className="self-end px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs transition-colors cursor-pointer shadow flex items-center gap-1"
                     >
-                      Next Question →
+                      <span>Next Exercise →</span>
                     </button>
                   </div>
                 )}
@@ -403,7 +452,7 @@ export default function Guidebook({
                   Guidebook Completed!
                 </h3>
                 <p className="text-sm text-emerald-100 max-w-sm">
-                  Fantastic job! You've mastered all four Polo place-value units. Polo Dash is now unlocked!
+                  Fantastic job! You've typed and verified all four Polo place-value units. Polo Dash is now unlocked!
                 </p>
 
                 <button

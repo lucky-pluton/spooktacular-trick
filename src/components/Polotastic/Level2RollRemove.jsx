@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight, RotateCcw, Check, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import PoloCounter from './PoloCounter';
 import PoloRoll from './PoloRoll';
+import PoloCounter from './PoloCounter';
 import PipCharacter from './PipCharacter';
+import PoloAnswerInput from './PoloAnswerInput';
 import { generateLevel2Question } from '../../data/polotasticQuestions';
 import { sounds } from '../../audio/soundEffects';
 
@@ -11,6 +12,11 @@ import { sounds } from '../../audio/soundEffects';
  * Level2RollRemove Component
  * Level 2 — Roll & Remove
  * Two-Digit Minus One-Digit Without Borrowing.
+ * 
+ * Direct Typing Upgrade:
+ * - Child removes loose ones while observing tens rolls remain intact.
+ * - Child types the total answer directly (zero MCQs).
+ * - Validated against actual question difference.
  */
 export default function Level2RollRemove({
   onComplete,
@@ -19,43 +25,39 @@ export default function Level2RollRemove({
 }) {
   const [currentProblem, setCurrentProblem] = useState(() => generateLevel2Question());
   const [removedLoose, setRemovedLoose] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null); // { isCorrect: boolean, text: string }
   const [solvedInSession, setSolvedInSession] = useState(0);
   const [isLevelFinished, setIsLevelFinished] = useState(false);
   const TARGET_SOLVED = 4;
 
-  const usedKeys = React.useRef([]);
+  const usedKeys = useRef([]);
 
   const loadNextQuestion = () => {
     usedKeys.current.push(currentProblem.key);
     const nextQ = generateLevel2Question(usedKeys.current);
     setCurrentProblem(nextQ);
     setRemovedLoose(0);
-    setSelectedAnswer(null);
     setFeedback(null);
     sounds.playPop();
   };
 
-  const handlePoloClick = () => {
-    if (feedback !== null || isLevelFinished) return;
-    if (removedLoose < currentProblem.subtrahend) {
+  const handlePoloClick = (index) => {
+    if (feedback?.isCorrect || isLevelFinished) return;
+    if (index === removedLoose && removedLoose < currentProblem.subtrahend) {
       sounds.playPop();
-      setRemovedLoose((c) => c + 1);
+      setRemovedLoose((r) => r + 1);
     }
   };
 
-  const handleAnswerSubmit = (value) => {
-    if (feedback !== null || isLevelFinished) return;
-    setSelectedAnswer(value);
+  const handleAnswerSubmit = ({ isCorrect }) => {
+    if (isLevelFinished) return;
 
-    if (value === currentProblem.diff) {
-      sounds.playSuccess();
+    if (isCorrect) {
       const newSolved = solvedInSession + 1;
       setSolvedInSession(newSolved);
       setFeedback({
         isCorrect: true,
-        text: `Spot on! ${currentProblem.minuend} − ${currentProblem.subtrahend} = ${currentProblem.diff}! We kept all ${currentProblem.tens} rolls safe and removed ${currentProblem.subtrahend} loose Polos!`,
+        text: `Brilliant! ${currentProblem.minuend} − ${currentProblem.subtrahend} = ${currentProblem.diff}! You kept the ${currentProblem.tens} rolls intact and removed ${currentProblem.subtrahend} loose Polos!`,
       });
 
       if (newSolved >= TARGET_SOLVED) {
@@ -71,10 +73,9 @@ export default function Level2RollRemove({
         }, 1200);
       }
     } else {
-      sounds.playIncorrect();
       setFeedback({
         isCorrect: false,
-        text: `Look closely: You have ${currentProblem.tens} rolls (${currentProblem.tens * 10}) and ${currentProblem.ones - removedLoose} loose Polos left. Total = ${currentProblem.tens * 10 + (currentProblem.ones - removedLoose)}!`,
+        text: `Take a close look: we have ${currentProblem.tens} rolls (${currentProblem.tens * 10}) and ${currentProblem.ones - removedLoose} loose Polos remaining. Add them together!`,
       });
     }
   };
@@ -95,7 +96,7 @@ export default function Level2RollRemove({
           <span>Stage Hub</span>
         </button>
 
-        {/* Progress tracker */}
+        {/* Progress Tracker */}
         <div className="flex items-center gap-2">
           <span className="text-xs sm:text-sm font-black text-emerald-300 uppercase tracking-wider">
             Level 2: Roll & Remove ({solvedInSession}/{TARGET_SOLVED})
@@ -132,7 +133,7 @@ export default function Level2RollRemove({
           {/* Question Equation Display */}
           <div className="text-center flex flex-col items-center gap-1">
             <span className="text-xs font-black text-amber-300 uppercase tracking-widest">
-              Two-Digit Minus One-Digit (No Borrowing)
+              Two-Digit Minus One-Digit Without Borrowing
             </span>
             <div className="inline-flex items-center gap-3 px-6 py-2 rounded-2xl bg-[#021811] border-2 border-emerald-400/80 shadow-inner">
               <span className="text-2xl sm:text-4xl font-black text-white font-mono">
@@ -153,20 +154,19 @@ export default function Level2RollRemove({
             </div>
           </div>
 
-          {/* Pip Narration */}
+          {/* Pip Narration & Guidance */}
           <PipCharacter
             mood={feedback?.isCorrect ? 'cheering' : 'guiding'}
-            speechText={`We have ${currentProblem.minuend} (${currentProblem.tens} rolls and ${currentProblem.ones} loose Polos). We only need to take away ${currentProblem.subtrahend} loose Polos. Because ${currentProblem.ones} ≥ ${currentProblem.subtrahend}, all rolls stay safe!`}
-            size="sm"
+            speechText={`We have ${currentProblem.minuend} (${currentProblem.tens} rolls and ${currentProblem.ones} loose Polos). We have plenty of loose Polos, so no rolls need to be broken! Remove ${currentProblem.subtrahend} loose Polos, then type your answer.`}
           />
 
-          {/* Visual Manipulatives Area */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 my-2">
-            {/* Tens Section: Rolls Stay Intact (7 cols) */}
+          {/* Place-Value Concrete Representations (Rolls for Tens, Polos for Ones) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Tens Section: Intact Rolls (7 cols) */}
             <div className="lg:col-span-7 flex flex-col p-4 rounded-3xl bg-[#031d16]/80 border-2 border-emerald-500/50 shadow-inner min-h-[170px]">
               <div className="flex items-center justify-between w-full text-xs font-black text-emerald-300 uppercase tracking-wider mb-2">
-                <span>🥖 Tens Rolls ({currentProblem.tens} Rolls = {currentProblem.tens * 10})</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 text-[10px] font-bold">
+                <span>🥖 Tens: {currentProblem.tens} Rolls ({currentProblem.tens * 10} Polos)</span>
+                <span className="text-emerald-400 text-[10px] bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-600/50">
                   Intact • No Need to Break
                 </span>
               </div>
@@ -202,6 +202,7 @@ export default function Level2RollRemove({
                       className={`transition-all duration-300 cursor-pointer ${
                         isRemoved ? 'opacity-20 scale-75 pointer-events-none' : 'hover:scale-110 active:scale-95'
                       }`}
+                      title={isRemoved ? 'Removed' : 'Tap to take away'}
                     >
                       <PoloCounter size="sm" numberLabel={isRemoved ? '✕' : idx + 1} />
                     </div>
@@ -245,51 +246,36 @@ export default function Level2RollRemove({
             <span>Total Value: <strong className="text-amber-300 text-sm">{currentProblem.tens * 10 + (currentProblem.ones - removedLoose)}</strong></span>
           </div>
 
-          {/* Answer Selection Keypad */}
+          {/* Direct Answer Typing Section (Replaces All Multiple Choice Buttons) */}
           <div className="flex flex-col items-center gap-2 pt-2 border-t border-emerald-800/50">
-            <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">
-              What is {currentProblem.minuend} − {currentProblem.subtrahend}?
+            <span className="text-xs sm:text-sm font-black text-emerald-300 uppercase tracking-wider">
+              Type the answer for {currentProblem.minuend} − {currentProblem.subtrahend}:
             </span>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {currentProblem.choices.map((choice, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAnswerSubmit(choice.value)}
-                  disabled={feedback?.isCorrect}
-                  type="button"
-                  className={`w-16 h-14 sm:w-20 sm:h-16 rounded-2xl border-2 font-mono font-black text-xl sm:text-2xl shadow transition-all cursor-pointer flex items-center justify-center ${
-                    selectedAnswer === choice.value
-                      ? choice.isCorrect
-                        ? 'bg-emerald-400 border-emerald-300 text-black scale-110 shadow-[0_0_20px_rgba(16,185,129,0.9)]'
-                        : 'bg-red-900 border-red-400 text-white animate-shake'
-                      : 'bg-emerald-950/80 hover:bg-emerald-900 border-emerald-600/70 text-white hover:scale-105 active:scale-95'
-                  }`}
-                >
-                  {choice.value}
-                </button>
-              ))}
-            </div>
+            <PoloAnswerInput
+              key={`l2_input_${currentProblem.key}`}
+              targetValue={currentProblem.diff}
+              prefix={`${currentProblem.minuend} − ${currentProblem.subtrahend} = `}
+              placeholder="___"
+              helperTip={`Keep the ${currentProblem.tens} rolls (${currentProblem.tens * 10}) intact! Just subtract the ones: ${currentProblem.ones} − ${currentProblem.subtrahend} = ${currentProblem.ones - currentProblem.subtrahend}. Add them together!`}
+              showKeypad={true}
+              disabled={feedback?.isCorrect}
+              onSubmit={handleAnswerSubmit}
+            />
           </div>
 
-          {/* Feedback banner */}
-          {feedback && (
-            <div className={`p-3.5 rounded-2xl text-xs sm:text-sm font-bold text-center flex flex-col items-center gap-1.5 animate-fadeIn ${
-              feedback.isCorrect
-                ? 'bg-emerald-500/25 border-2 border-emerald-400 text-emerald-200'
-                : 'bg-amber-500/25 border-2 border-amber-400 text-amber-200'
-            }`}>
-              <p>{feedback.text}</p>
-              {feedback.isCorrect && solvedInSession < TARGET_SOLVED && (
-                <button
-                  onClick={loadNextQuestion}
-                  type="button"
-                  className="mt-1 px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs cursor-pointer shadow flex items-center gap-1"
-                >
-                  <span>Next Question</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              )}
+          {/* Feedback banner & Next Button */}
+          {feedback && feedback.isCorrect && solvedInSession < TARGET_SOLVED && (
+            <div className="p-3.5 rounded-2xl text-xs sm:text-sm font-bold text-center flex flex-col items-center gap-2 animate-fadeIn bg-emerald-500/25 border-2 border-emerald-400 text-emerald-200">
+              <p className="text-white font-black">{feedback.text}</p>
+              <button
+                onClick={loadNextQuestion}
+                type="button"
+                className="px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs cursor-pointer shadow flex items-center gap-1 transition-all"
+              >
+                <span>Next Question</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
         </div>
@@ -309,7 +295,7 @@ export default function Level2RollRemove({
               Roll & Remove Complete!
             </h2>
             <p className="text-sm text-emerald-100 max-w-md mx-auto mt-1">
-              You know exactly when rolls can stay whole! Now, what happens when you don't have enough loose Polos? Get ready for Level 3: Break a Roll!
+              You've mastered two-digit subtraction without borrowing! Now prepare for Level 3: when you don't have enough ones, you get to Break a Roll!
             </p>
           </div>
 

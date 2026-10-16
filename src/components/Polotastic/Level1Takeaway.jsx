@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight, RotateCcw, Check, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import PoloCounter from './PoloCounter';
 import PipCharacter from './PipCharacter';
+import PoloAnswerInput from './PoloAnswerInput';
 import { generateLevel1Question } from '../../data/polotasticQuestions';
 import { sounds } from '../../audio/soundEffects';
 
@@ -10,6 +11,12 @@ import { sounds } from '../../audio/soundEffects';
  * Level1Takeaway Component
  * Level 1 — Polo Takeaway
  * Single-Digit Subtraction Without Borrowing.
+ * 
+ * Direct Typing Upgrade:
+ * - Child removes Polos into takeaway basket.
+ * - Child counts the remaining Polos on the plate.
+ * - Child types the final answer directly into the numeric answer field (zero MCQs).
+ * - Immediate, gentle validation and feedback with recounting hints.
  */
 export default function Level1Takeaway({
   onComplete,
@@ -18,13 +25,12 @@ export default function Level1Takeaway({
 }) {
   const [currentProblem, setCurrentProblem] = useState(() => generateLevel1Question());
   const [removedCount, setRemovedCount] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [feedback, setFeedback] = useState(null); // { isCorrect: boolean, text: string }
   const [solvedInSession, setSolvedInSession] = useState(0);
   const [isLevelFinished, setIsLevelFinished] = useState(false);
   const TARGET_SOLVED = 4;
 
-  const usedKeys = React.useRef([]);
+  const usedKeys = useRef([]);
 
   // Reset per question
   const loadNextQuestion = () => {
@@ -32,13 +38,12 @@ export default function Level1Takeaway({
     const nextQ = generateLevel1Question(usedKeys.current);
     setCurrentProblem(nextQ);
     setRemovedCount(0);
-    setSelectedAnswer(null);
     setFeedback(null);
     sounds.playPop();
   };
 
   const handlePoloClick = () => {
-    if (feedback !== null || isLevelFinished) return;
+    if (feedback?.isCorrect || isLevelFinished) return;
     // Allow clicking loose Polos to take them away up to the required subtrahend
     if (removedCount < currentProblem.subtrahend) {
       sounds.playPop();
@@ -46,12 +51,10 @@ export default function Level1Takeaway({
     }
   };
 
-  const handleAnswerSubmit = (value) => {
-    if (feedback !== null || isLevelFinished) return;
-    setSelectedAnswer(value);
+  const handleAnswerSubmit = ({ isCorrect }) => {
+    if (isLevelFinished) return;
 
-    if (value === currentProblem.diff) {
-      sounds.playSuccess();
+    if (isCorrect) {
       const newSolved = solvedInSession + 1;
       setSolvedInSession(newSolved);
       setFeedback({
@@ -72,7 +75,6 @@ export default function Level1Takeaway({
         }, 1200);
       }
     } else {
-      sounds.playIncorrect();
       setFeedback({
         isCorrect: false,
         text: `Let's count together! You had ${currentProblem.minuend} Polos and took away ${currentProblem.subtrahend}. Count the remaining Polos on the plate!`,
@@ -157,45 +159,52 @@ export default function Level1Takeaway({
           {/* Pip Narration & Guidance */}
           <PipCharacter
             mood={feedback?.isCorrect ? 'cheering' : 'guiding'}
-            speechText={`We started with ${currentProblem.minuend} Polos. Take away ${currentProblem.subtrahend} Polos into the takeaway basket! Then count how many remain.`}
-            size="sm"
+            speechText={`We started with ${currentProblem.minuend} Polos. Take away ${currentProblem.subtrahend} Polos into the takeaway basket! Then count how many remain and type your answer below.`}
           />
 
-          {/* Interactive Playground: Plate vs Takeaway Basket */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
+          {/* Interactive Manipulatives Area (Plate & Basket) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Left: The Plate with Remaining Polos */}
-            <div className="flex flex-col items-center justify-between p-4 rounded-3xl bg-[#031d16]/80 border-2 border-emerald-500/50 shadow-inner min-h-[170px]">
+            <div className="flex flex-col items-center p-4 rounded-3xl bg-[#031d16]/80 border-2 border-emerald-500/50 shadow-inner min-h-[170px] justify-between">
               <div className="flex items-center justify-between w-full text-xs font-black text-emerald-300 uppercase tracking-wider mb-2">
-                <span>🍽️ Plate ({currentProblem.minuend - removedCount} left)</span>
-                <span className="text-emerald-400/80">Tap Polo to remove</span>
+                <span>🍽️ The Plate ({currentProblem.minuend - removedCount} Polos left)</span>
+                <span className="text-emerald-400 text-[10px]">Tap to takeaway</span>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-2.5 p-2">
+              {/* Polos Container */}
+              <div className="flex flex-wrap items-center justify-center gap-2.5 p-2 flex-1">
                 {Array.from({ length: currentProblem.minuend }).map((_, idx) => {
                   const isRemoved = idx < removedCount;
                   return (
                     <div
                       key={idx}
-                      onClick={() => handlePoloClick(idx)}
+                      onClick={handlePoloClick}
                       className={`transition-all duration-300 cursor-pointer ${
-                        isRemoved ? 'opacity-20 scale-75 pointer-events-none' : 'hover:scale-110 active:scale-95'
+                        isRemoved
+                          ? 'opacity-20 scale-75 pointer-events-none'
+                          : 'hover:scale-110 active:scale-95'
                       }`}
+                      title={isRemoved ? 'Removed to basket' : 'Tap to take away'}
                     >
-                      <PoloCounter size="md" numberLabel={isRemoved ? '✕' : idx + 1} />
+                      <PoloCounter
+                        size="md"
+                        numberLabel={isRemoved ? '✕' : idx + 1}
+                      />
                     </div>
                   );
                 })}
               </div>
 
-              <span className="text-[11px] font-bold text-emerald-200 mt-2">
-                Plate has {currentProblem.minuend - removedCount} Polo{currentProblem.minuend - removedCount === 1 ? '' : 's'} remaining
+              <span className="text-[11px] text-emerald-300/80 font-medium">
+                {currentProblem.minuend - removedCount} Polos remaining on plate
               </span>
             </div>
 
             {/* Right: The Takeaway Basket */}
-            <div className="flex flex-col items-center justify-between p-4 rounded-3xl bg-[#0a261d]/80 border-2 border-amber-500/50 shadow-inner min-h-[170px]">
+            <div className="flex flex-col items-center p-4 rounded-3xl bg-[#1a1405]/80 border-2 border-amber-500/50 shadow-inner min-h-[170px] justify-between">
               <div className="flex items-center justify-between w-full text-xs font-black text-amber-300 uppercase tracking-wider mb-2">
-                <span>🧺 Takeaway Basket ({removedCount} of {currentProblem.subtrahend} taken)</span>
+                <span>🧺 Takeaway Basket ({removedCount}/{currentProblem.subtrahend})</span>
+                <span className="text-amber-400 text-[10px]">Needs {currentProblem.subtrahend}</span>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-2.5 min-h-[70px] p-2">
@@ -233,51 +242,37 @@ export default function Level1Takeaway({
             </div>
           </div>
 
-          {/* Answer Selection Keypad */}
+          {/* Direct Answer Typing Section (Replaces All Multiple Choice Buttons) */}
           <div className="flex flex-col items-center gap-2 pt-2 border-t border-emerald-800/50">
-            <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">
-              How many Polos are left on the plate?
+            <span className="text-xs sm:text-sm font-black text-emerald-300 uppercase tracking-wider">
+              Type the number of Polos left on the plate:
             </span>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              {currentProblem.choices.map((choice, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAnswerSubmit(choice.value)}
-                  disabled={feedback?.isCorrect}
-                  type="button"
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 font-mono font-black text-xl sm:text-2xl shadow transition-all cursor-pointer flex items-center justify-center ${
-                    selectedAnswer === choice.value
-                      ? choice.isCorrect
-                        ? 'bg-emerald-400 border-emerald-300 text-black scale-110 shadow-[0_0_20px_rgba(16,185,129,0.9)]'
-                        : 'bg-red-900 border-red-400 text-white animate-shake'
-                      : 'bg-emerald-950/80 hover:bg-emerald-900 border-emerald-600/70 text-white hover:scale-105 active:scale-95'
-                  }`}
-                >
-                  {choice.value}
-                </button>
-              ))}
-            </div>
+            <PoloAnswerInput
+              key={`l1_input_${currentProblem.key}`}
+              targetValue={currentProblem.diff}
+              prefix={`${currentProblem.minuend} − ${currentProblem.subtrahend} = `}
+              suffix="Polos"
+              placeholder="___"
+              helperTip={`Count the remaining Polos on the plate! You had ${currentProblem.minuend} and removed ${currentProblem.subtrahend}.`}
+              showKeypad={true}
+              disabled={feedback?.isCorrect}
+              onSubmit={handleAnswerSubmit}
+            />
           </div>
 
-          {/* Feedback banner */}
-          {feedback && (
-            <div className={`p-3.5 rounded-2xl text-xs sm:text-sm font-bold text-center flex flex-col items-center gap-1.5 animate-fadeIn ${
-              feedback.isCorrect
-                ? 'bg-emerald-500/25 border-2 border-emerald-400 text-emerald-200'
-                : 'bg-amber-500/25 border-2 border-amber-400 text-amber-200'
-            }`}>
-              <p>{feedback.text}</p>
-              {feedback.isCorrect && solvedInSession < TARGET_SOLVED && (
-                <button
-                  onClick={loadNextQuestion}
-                  type="button"
-                  className="mt-1 px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs cursor-pointer shadow flex items-center gap-1"
-                >
-                  <span>Next Question</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              )}
+          {/* Feedback banner & Next Question button */}
+          {feedback && feedback.isCorrect && solvedInSession < TARGET_SOLVED && (
+            <div className="p-3.5 rounded-2xl text-xs sm:text-sm font-bold text-center flex flex-col items-center gap-2 animate-fadeIn bg-emerald-500/25 border-2 border-emerald-400 text-emerald-200">
+              <p className="text-white font-black">{feedback.text}</p>
+              <button
+                onClick={loadNextQuestion}
+                type="button"
+                className="px-5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-black text-xs cursor-pointer shadow flex items-center gap-1 transition-all"
+              >
+                <span>Next Question</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
         </div>
@@ -297,7 +292,7 @@ export default function Level1Takeaway({
               Polo Takeaway Complete!
             </h2>
             <p className="text-sm text-emerald-100 max-w-md mx-auto mt-1">
-              You've successfully solved single-digit subtraction without borrowing! You are now ready for two-digit numbers with rolls!
+              You've successfully solved single-digit subtraction by typing your own answers! You are now ready for two-digit numbers with rolls!
             </p>
           </div>
 

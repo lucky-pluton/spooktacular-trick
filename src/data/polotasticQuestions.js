@@ -3,9 +3,10 @@
  * 
  * Enforces strict pedagogical boundaries:
  * - Place-value units: 1 Polo (one), 1 Roll (10 ones), 1 Packet (10 rolls / 100 ones), 1 Carton (10 packets / 1000 ones).
+ * - Direct Answer Typing: ALL multiple-choice questions (options/choices) are removed in favor of direct typing.
  * - Level 1: Single-digit minus single-digit (NO borrowing).
  * - Level 2: Two-digit minus one-digit (minuend ones >= subtrahend, NO borrowing).
- * - Level 3: Two-digit minus one-digit (minuend ones < subtrahend, MUST borrow 1 ten).
+ * - Level 3: Two-digit minus one-digit (minuend ones < subtrahend, MUST borrow 1 ten with multi-step typed verification).
  */
 
 // Four standard place-value units
@@ -19,99 +20,93 @@ export const POLO_UNITS = {
 /**
  * Generates fresh questions for the Polo Dash prerequisite runner.
  * Questions cover all 4 place value units, conversions, and comparisons.
+ * Every obstacle requires direct answer typing (no multiple-choice lanes).
  */
 export function generatePoloDashCourse() {
   const allObstacles = [
     {
       id: 'dash_ones_to_roll',
       unitFocus: 'ten',
+      obstacleIcon: '🥖',
       question: 'How many loose Polos make 1 roll?',
       promptSpeech: 'How many loose Polos make one roll?',
-      helperTip: 'Count 10 ones together to form 1 whole roll!',
+      equationPrompt: '1 roll = ___ loose Polos',
+      helperTip: 'Count 10 ones together to form 1 whole roll! 1 roll = 10 Polos.',
       targetValue: 10,
-      options: [
-        { id: 'opt_1', lane: 0, text: '5 Polos', value: 5, icon: '🍬', isCorrect: false, feedback: '5 is half a roll! You need 10 Polos for 1 roll.' },
-        { id: 'opt_2', lane: 1, text: '10 Polos', value: 10, icon: '🍬', isCorrect: true, feedback: 'Spot on! 10 Polos = 1 Roll (One Ten)!' },
-        { id: 'opt_3', lane: 2, text: '100 Polos', value: 100, icon: '🍬', isCorrect: false, feedback: '100 Polos makes a whole packet! A roll needs 10.' },
-      ],
+      acceptableAnswers: [10, '10'],
+      unitSuffix: 'Polos',
     },
     {
       id: 'dash_roll_value',
       unitFocus: 'ten',
-      question: 'What is 1 roll worth?',
-      promptSpeech: 'What is one roll worth?',
-      helperTip: 'A roll is a bundle of 10 individual Polos!',
+      obstacleIcon: '🎯',
+      question: 'What is 1 roll worth in ones?',
+      promptSpeech: 'What is one roll worth in ones?',
+      equationPrompt: '1 roll = ___ ones',
+      helperTip: 'A roll is a single bundle of 10 individual Polos. 1 roll = 10 ones!',
       targetValue: 10,
-      options: [
-        { id: 'opt_1', lane: 0, text: '10 Ones', value: 10, icon: '🎯', isCorrect: true, feedback: 'Yes! 1 roll = 10 ones = 1 ten!' },
-        { id: 'opt_2', lane: 1, text: '1 One', value: 1, icon: '🎯', isCorrect: false, feedback: '1 one is just 1 single Polo. A roll has 10!' },
-        { id: 'opt_3', lane: 2, text: '20 Ones', value: 20, icon: '🎯', isCorrect: false, feedback: '20 ones would be 2 rolls!' },
-      ],
+      acceptableAnswers: [10, '10'],
+      unitSuffix: 'ones',
     },
     {
       id: 'dash_rolls_to_packet',
       unitFocus: 'hundred',
+      obstacleIcon: '📦',
       question: 'How many rolls make 1 packet?',
       promptSpeech: 'How many rolls make one packet?',
-      helperTip: 'Ten rolls bundle up to make 1 packet (100)!',
+      equationPrompt: '1 packet = ___ rolls',
+      helperTip: 'Ten rolls of 10 bundle up to make 1 packet of 100! 1 packet = 10 rolls.',
       targetValue: 10,
-      options: [
-        { id: 'opt_1', lane: 0, text: '2 Rolls', value: 2, icon: '📦', isCorrect: false, feedback: '2 rolls is only 20 Polos. You need 10 rolls to make 100!' },
-        { id: 'opt_2', lane: 1, text: '100 Rolls', value: 100, icon: '📦', isCorrect: false, feedback: '100 rolls is 1,000 Polos! 10 rolls make 1 packet.' },
-        { id: 'opt_3', lane: 2, text: '10 Rolls', value: 10, icon: '📦', isCorrect: true, feedback: 'Brilliant! 10 rolls × 10 = 100 Polos = 1 Packet!' },
-      ],
+      acceptableAnswers: [10, '10'],
+      unitSuffix: 'rolls',
     },
     {
-      id: 'dash_represents_100',
+      id: 'dash_ones_in_packet',
       unitFocus: 'hundred',
-      question: 'Which represents 100 Polos?',
-      promptSpeech: 'Which represents 100 Polos?',
-      helperTip: 'Remember: 1 packet has 10 rolls = 100 ones!',
+      obstacleIcon: '🍬',
+      question: 'How many ones are in 1 packet?',
+      promptSpeech: 'How many ones are in one packet?',
+      equationPrompt: '1 packet = ___ loose Polos',
+      helperTip: '1 packet contains 10 rolls of 10. 10 × 10 = 100 loose Polos!',
       targetValue: 100,
-      options: [
-        { id: 'opt_1', lane: 0, text: '1 Roll', value: 10, icon: '🥖', isCorrect: false, feedback: '1 roll is only 10 Polos!' },
-        { id: 'opt_2', lane: 1, text: '1 Packet', value: 100, icon: '📦', isCorrect: true, feedback: 'Fantastic! 1 packet = 10 rolls = 100 Polos!' },
-        { id: 'opt_3', lane: 2, text: '1 Carton', value: 1000, icon: '🚚', isCorrect: false, feedback: '1 carton is 1,000 Polos! 1 packet is 100.' },
-      ],
+      acceptableAnswers: [100, '100'],
+      unitSuffix: 'Polos',
     },
     {
       id: 'dash_packets_to_carton',
       unitFocus: 'thousand',
+      obstacleIcon: '🚚',
       question: 'How many packets make 1 carton?',
       promptSpeech: 'How many packets make one carton?',
-      helperTip: '10 packets of 100 make 1 big carton (1,000)!',
+      equationPrompt: '1 carton = ___ packets',
+      helperTip: 'Ten packets of 100 make 1 big carton of 1,000! 1 carton = 10 packets.',
       targetValue: 10,
-      options: [
-        { id: 'opt_1', lane: 0, text: '10 Packets', value: 10, icon: '🚚', isCorrect: true, feedback: 'Super! 10 packets × 100 = 1,000 Polos = 1 Carton!' },
-        { id: 'opt_2', lane: 1, text: '5 Packets', value: 5, icon: '🚚', isCorrect: false, feedback: '5 packets = 500 Polos. You need 10 packets for 1,000!' },
-        { id: 'opt_3', lane: 2, text: '20 Packets', value: 20, icon: '🚚', isCorrect: false, feedback: '10 packets is the exact bundle for 1 carton!' },
-      ],
+      acceptableAnswers: [10, '10'],
+      unitSuffix: 'packets',
     },
     {
       id: 'dash_which_is_greater',
       unitFocus: 'comparison',
-      question: 'Which is greater: 1 roll or 9 individual Polos?',
-      promptSpeech: 'Which is greater: one roll or 9 individual Polos?',
-      helperTip: '1 roll = 10 ones. 10 is greater than 9!',
+      obstacleIcon: '⚖️',
+      question: 'Which is greater: 1 roll (10) or 9 individual Polos (9)? Type the greater value:',
+      promptSpeech: 'Which is greater: 1 roll or 9 individual Polos? Type the greater value.',
+      equationPrompt: 'Greater value = ___',
+      helperTip: '1 roll is worth 10 ones. Since 10 > 9, type 10!',
       targetValue: 10,
-      options: [
-        { id: 'opt_1', lane: 0, text: '9 Polos (9)', value: 9, icon: '🍬', isCorrect: false, feedback: '9 is less than 10. 1 roll is worth 10!' },
-        { id: 'opt_2', lane: 1, text: '1 Roll (10)', value: 10, icon: '🥖', isCorrect: true, feedback: 'Exactly right! 1 roll = 10, and 10 > 9!' },
-        { id: 'opt_3', lane: 2, text: 'They are equal', value: 0, icon: '⚖️', isCorrect: false, feedback: '1 roll has 10 Polos, which is 1 more than 9!' },
-      ],
+      acceptableAnswers: [10, '10'],
+      unitSuffix: '',
     },
     {
       id: 'dash_ones_in_carton',
       unitFocus: 'thousand',
+      obstacleIcon: '🚚',
       question: 'How many ones are in 1 carton?',
       promptSpeech: 'How many ones are in one carton?',
-      helperTip: '1 carton holds 10 packets × 10 rolls × 10 ones = 1,000!',
+      equationPrompt: '1 carton = ___ ones',
+      helperTip: '1 carton holds 10 packets × 10 rolls × 10 ones = 1,000 ones!',
       targetValue: 1000,
-      options: [
-        { id: 'opt_1', lane: 0, text: '100 ones', value: 100, icon: '📦', isCorrect: false, feedback: '100 ones is 1 packet. A carton has 1,000 ones!' },
-        { id: 'opt_2', lane: 1, text: '10 ones', value: 10, icon: '🥖', isCorrect: false, feedback: '10 ones is 1 roll. A carton is 1,000 ones!' },
-        { id: 'opt_3', lane: 2, text: '1,000 ones', value: 1000, icon: '🚚', isCorrect: true, feedback: 'Magnificent! 1 carton = 1,000 individual Polos!' },
-      ],
+      acceptableAnswers: [1000, '1000', '1,000'],
+      unitSuffix: 'ones',
     },
   ];
 
@@ -127,9 +122,10 @@ function randomInt(min, max) {
 
 /**
  * Level 1: Single-Digit Subtraction Without Borrowing
- * Minuend: 3 to 9
+ * Minuend: 4 to 9
  * Subtrahend: 1 to (Minuend - 1)
  * Guaranteed: Minuend >= Subtrahend, single digit, no borrowing.
+ * Direct typing: child types remaining Polos after takeaway.
  */
 export function generateLevel1Question(excludeKeys = []) {
   const candidates = [];
@@ -154,27 +150,6 @@ export function generateLevel1Question(excludeKeys = []) {
 
   const pick = pool[randomInt(0, pool.length - 1)];
 
-  // Generate 3 clever distractors for child selection
-  const distractors = new Set();
-  const diff = pick.diff;
-  
-  if (diff + 1 <= 9) distractors.add(diff + 1);
-  if (diff - 1 >= 1) distractors.add(diff - 1);
-  if (diff + 2 <= 9) distractors.add(diff + 2);
-  distractors.add(pick.subtrahend);
-  distractors.delete(diff);
-
-  const distractorArr = Array.from(distractors).slice(0, 3);
-  while (distractorArr.length < 3) {
-    const r = randomInt(1, 9);
-    if (r !== diff && !distractorArr.includes(r)) distractorArr.push(r);
-  }
-
-  const choices = [
-    { value: diff, isCorrect: true },
-    ...distractorArr.map((v) => ({ value: v, isCorrect: false })),
-  ].sort(() => Math.random() - 0.5);
-
   return {
     id: `l1_${pick.key}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     key: pick.key,
@@ -182,10 +157,11 @@ export function generateLevel1Question(excludeKeys = []) {
     minuend: pick.minuend,
     subtrahend: pick.subtrahend,
     diff: pick.diff,
+    targetValue: pick.diff,
     requiresBorrowing: false,
-    instruction: `We have ${pick.minuend} Polos. Take away ${pick.subtrahend} Polos into the basket!`,
-    speech: `We have ${pick.minuend} Polos. Take away ${pick.subtrahend} Polos into the takeaway basket.`,
-    choices,
+    instruction: `We have ${pick.minuend} Polos. Take away ${pick.subtrahend} Polos into the basket, then type how many remain!`,
+    speech: `We have ${pick.minuend} Polos. Take away ${pick.subtrahend} Polos into the takeaway basket, then type how many remain.`,
+    helperTip: `Count the Polos left on the plate! You had ${pick.minuend} and removed ${pick.subtrahend}.`,
     // Manipulative representations
     initialPolos: pick.minuend,
     polosToRemove: pick.subtrahend,
@@ -195,9 +171,10 @@ export function generateLevel1Question(excludeKeys = []) {
 
 /**
  * Level 2: Two-Digit Minus One-Digit Without Borrowing
- * Minuend: Tens (2..6) + Ones (2..9) => 22 to 69
- * Subtrahend: 1 to Ones (so ones digit >= subtrahend, ZERO borrowing needed)
+ * Minuend: Tens (2..5) + Ones (3..8) => 23 to 58
+ * Subtrahend: 1 to Math.min(Ones, 6) (guarantees ones >= subtrahend, ZERO borrowing)
  * Difference: (Tens * 10) + (Ones - Subtrahend)
+ * Direct typing: child types remaining total after removing loose ones.
  */
 export function generateLevel2Question(excludeKeys = []) {
   const candidates = [];
@@ -223,26 +200,6 @@ export function generateLevel2Question(excludeKeys = []) {
 
   const pick = pool[randomInt(0, pool.length - 1)];
 
-  // Generate distractors near the correct answer
-  const distractors = new Set();
-  const diff = pick.diff;
-  distractors.add(diff + 1);
-  distractors.add(diff - 1);
-  distractors.add(diff + 10);
-  distractors.add(pick.minuend);
-  distractors.delete(diff);
-
-  const distractorArr = Array.from(distractors).slice(0, 3);
-  while (distractorArr.length < 3) {
-    const r = diff + randomInt(-4, 4);
-    if (r > 0 && r !== diff && !distractorArr.includes(r)) distractorArr.push(r);
-  }
-
-  const choices = [
-    { value: diff, isCorrect: true },
-    ...distractorArr.map((v) => ({ value: v, isCorrect: false })),
-  ].sort(() => Math.random() - 0.5);
-
   return {
     id: `l2_${pick.key}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     key: pick.key,
@@ -252,11 +209,11 @@ export function generateLevel2Question(excludeKeys = []) {
     minuend: pick.minuend,
     subtrahend: pick.subtrahend,
     diff: pick.diff,
+    targetValue: pick.diff,
     requiresBorrowing: false,
-    instruction: `We have ${pick.minuend} (${pick.tens} rolls and ${pick.ones} loose Polos). Take away ${pick.subtrahend} loose Polos!`,
-    speech: `We have ${pick.minuend}. That is ${pick.tens} rolls and ${pick.ones} loose Polos. Take away ${pick.subtrahend} loose Polos.`,
-    tip: `Notice that ${pick.ones} is bigger than ${pick.subtrahend}! We have enough loose Polos, so we don't need to break any rolls.`,
-    choices,
+    instruction: `We have ${pick.minuend} (${pick.tens} rolls and ${pick.ones} loose Polos). Take away ${pick.subtrahend} loose Polos, then type the remaining total!`,
+    speech: `We have ${pick.minuend}. That is ${pick.tens} rolls and ${pick.ones} loose Polos. Take away ${pick.subtrahend} loose Polos, then type the total left.`,
+    helperTip: `Keep the ${pick.tens} rolls (${pick.tens * 10}) intact! Just subtract the ones: ${pick.ones} − ${pick.subtrahend} = ${pick.ones - pick.subtrahend}. Add them together: ${pick.tens * 10 + (pick.ones - pick.subtrahend)}!`,
     // Manipulative representations
     initialRolls: pick.tens,
     initialLoosePolos: pick.ones,
@@ -268,13 +225,12 @@ export function generateLevel2Question(excludeKeys = []) {
 
 /**
  * Level 3: Two-Digit Minus One-Digit WITH Borrowing
- * Minuend: Tens (2..6) + Ones (0..6)
+ * Minuend: Tens (2..5) + Ones (1..5)
  * Subtrahend: (Ones + 2) to 9 (guaranteed Ones < Subtrahend => MUST borrow 1 ten)
- * Regrouping:
- *   1 Roll (10) breaks apart into 10 loose Polos.
- *   Rolls decrease by 1: (Tens - 1)
- *   Loose Polos increase by 10: (Ones + 10)
- *   Value stays identical: 10*(Tens - 1) + (Ones + 10) = 10*Tens + Ones.
+ * Multi-Step Typed Validation:
+ *   Step 1: Child breaks 1 roll, then types loose Polos available: (ones + 10).
+ *   Step 2: Child removes subtrahend loose Polos, then types remaining loose Polos: (ones + 10) - subtrahend.
+ *   Step 3: Child types final complete answer: diff.
  */
 export function generateLevel3Question(excludeKeys = []) {
   const candidates = [];
@@ -301,28 +257,6 @@ export function generateLevel3Question(excludeKeys = []) {
 
   const pick = pool[randomInt(0, pool.length - 1)];
 
-  // Distractors
-  const distractors = new Set();
-  const diff = pick.diff;
-  // Common kid mistake 1: subtract smaller from larger in ones column: (e.g. 32-7 => 30 + (7-2) = 35 or 25)
-  const wrongNoBorrow = pick.tens * 10 - (pick.subtrahend - pick.ones);
-  if (wrongNoBorrow !== diff && wrongNoBorrow > 0) distractors.add(wrongNoBorrow);
-  distractors.add(diff + 10);
-  distractors.add(diff - 1);
-  distractors.add(diff + 1);
-  distractors.delete(diff);
-
-  const distractorArr = Array.from(distractors).slice(0, 3);
-  while (distractorArr.length < 3) {
-    const r = diff + randomInt(-3, 3);
-    if (r > 0 && r !== diff && !distractorArr.includes(r)) distractorArr.push(r);
-  }
-
-  const choices = [
-    { value: diff, isCorrect: true },
-    ...distractorArr.map((v) => ({ value: v, isCorrect: false })),
-  ].sort(() => Math.random() - 0.5);
-
   return {
     id: `l3_${pick.key}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     key: pick.key,
@@ -333,10 +267,16 @@ export function generateLevel3Question(excludeKeys = []) {
     subtrahend: pick.subtrahend,
     diff: pick.diff,
     requiresBorrowing: true,
-    instruction: `We need to take away ${pick.subtrahend} Polos, but only have ${pick.ones} loose Polos! Break 1 roll into 10 loose Polos!`,
+    instruction: `We need to take away ${pick.subtrahend} Polos, but only have ${pick.ones} loose Polos! Tap a roll to break it into 10 loose Polos.`,
     speech: `We need to take away ${pick.subtrahend} Polos, but we only have ${pick.ones} loose Polos. Tap a roll to break it into 10 loose Polos!`,
-    choices,
-    // Step-by-step regrouping values
+    // Step targets for typed validation
+    step1Target: pick.ones + 10, // Loose Polos after breaking roll
+    step1Helper: `We started with ${pick.ones} loose Polos and broke 1 roll into 10 more Polos. ${pick.ones} + 10 = ${pick.ones + 10}!`,
+    step2Target: (pick.ones + 10) - pick.subtrahend, // Loose Polos remaining after takeaway
+    step2Helper: `Take away ${pick.subtrahend} loose Polos from ${pick.ones + 10}. ${pick.ones + 10} − ${pick.subtrahend} = ${(pick.ones + 10) - pick.subtrahend}!`,
+    step3Target: pick.diff, // Final answer
+    step3Helper: `Combine ${pick.tens - 1} rolls (${(pick.tens - 1) * 10}) and ${(pick.ones + 10) - pick.subtrahend} loose Polos. ${(pick.tens - 1) * 10} + ${(pick.ones + 10) - pick.subtrahend} = ${pick.diff}!`,
+    // Manipulative representations
     initialRolls: pick.tens,
     initialLoosePolos: pick.ones,
     afterBorrowRolls: pick.tens - 1,
@@ -348,7 +288,7 @@ export function generateLevel3Question(excludeKeys = []) {
 }
 
 /**
- * Self-validation function verifying mathematical integrity across 100 random problems.
+ * Self-validation function verifying mathematical integrity across random problems.
  */
 export function validateAllPolotasticGenerators() {
   const errors = [];
@@ -359,6 +299,7 @@ export function validateAllPolotasticGenerators() {
     if (q.minuend < 1 || q.minuend > 9) errors.push(`L1 minuend ${q.minuend} not 1..9`);
     if (q.subtrahend >= q.minuend) errors.push(`L1 subtrahend ${q.subtrahend} >= minuend ${q.minuend}`);
     if (q.minuend - q.subtrahend !== q.diff) errors.push(`L1 math mismatch ${q.minuend} - ${q.subtrahend} !== ${q.diff}`);
+    if (q.targetValue !== q.diff) errors.push(`L1 targetValue mismatch`);
     if (q.requiresBorrowing) errors.push(`L1 flagged requiresBorrowing`);
   }
 
@@ -368,19 +309,31 @@ export function validateAllPolotasticGenerators() {
     if (q.minuend < 10 || q.minuend > 99) errors.push(`L2 minuend ${q.minuend} not 2 digits`);
     if (q.ones < q.subtrahend) errors.push(`L2 ones ${q.ones} < subtrahend ${q.subtrahend} (accidental borrowing)`);
     if (q.minuend - q.subtrahend !== q.diff) errors.push(`L2 math mismatch ${q.minuend} - ${q.subtrahend} !== ${q.diff}`);
+    if (q.targetValue !== q.diff) errors.push(`L2 targetValue mismatch`);
   }
 
-  // 3. Validate Level 3 (two-digit minus one-digit WITH borrowing, ones < subtrahend)
+  // 3. Validate Level 3 (two-digit minus one-digit WITH borrowing, multi-step targets)
   for (let i = 0; i < 40; i++) {
     const q = generateLevel3Question();
     if (q.ones >= q.subtrahend) errors.push(`L3 ones ${q.ones} >= subtrahend ${q.subtrahend} (borrowing missing)`);
     if (q.afterBorrowRolls !== q.tens - 1) errors.push(`L3 afterBorrowRolls incorrect`);
     if (q.afterBorrowLoosePolos !== q.ones + 10) errors.push(`L3 afterBorrowLoosePolos incorrect`);
+    if (q.step1Target !== q.ones + 10) errors.push(`L3 step1Target incorrect`);
+    if (q.step2Target !== (q.ones + 10) - q.subtrahend) errors.push(`L3 step2Target incorrect`);
+    if (q.step3Target !== q.diff) errors.push(`L3 step3Target incorrect`);
     if (q.afterBorrowRolls * 10 + q.afterBorrowLoosePolos !== q.minuend) {
       errors.push(`L3 value changed during regrouping!`);
     }
     const finalVal = q.finalRolls * 10 + q.remainingLoose;
     if (finalVal !== q.diff) errors.push(`L3 final remaining mismatch: ${finalVal} !== ${q.diff}`);
+  }
+
+  // 4. Validate Polo Dash course (direct typing questions)
+  const dashCourse = generatePoloDashCourse();
+  if (dashCourse.length < 5) errors.push(`Polo Dash course has fewer than 5 obstacles`);
+  for (const obs of dashCourse) {
+    if (!obs.targetValue) errors.push(`Polo Dash obstacle ${obs.id} missing targetValue`);
+    if (!obs.equationPrompt) errors.push(`Polo Dash obstacle ${obs.id} missing equationPrompt`);
   }
 
   if (errors.length > 0) {

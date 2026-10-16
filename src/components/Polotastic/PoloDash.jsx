@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Sparkles, RotateCcw, Trophy, Check, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { generatePoloDashCourse } from '../../data/polotasticQuestions';
 import { sounds } from '../../audio/soundEffects';
+import PoloAnswerInput from './PoloAnswerInput';
+import PoloCounter from './PoloCounter';
 
 /**
  * PoloDash Component
  * Prerequisite educational runner-inspired obstacle course game.
  * 
- * Features:
- * - 3-lane path (Left: 0, Middle: 1, Right: 2).
- * - Keyboard (ArrowLeft/ArrowRight, A/D, 1/2/3) and touch controls.
- * - Dynamic questions covering all four place-value units.
- * - Visual obstacle gates in each lane.
- * - Gentle correction without penalties or shame.
- * - Confetti celebration and unlocking Level 1 upon course completion.
+ * Direct-Answer Typing Upgrade:
+ * - Runner tracks 3 lanes (Left: 0, Center: 1, Right: 2) collecting loose Polos.
+ * - Approaching an obstacle slows and pauses the runner at a safe checkpoint.
+ * - The obstacle challenge is presented with a direct numeric typing field (zero MCQs).
+ * - Typing the correct answer unlocks the gate, plays a dash animation through the obstacle,
+ *   and awards +10 bonus Polos and +100 score.
+ * - Safe input handling: keyboard typing in the answer field does NOT steer the runner.
  */
 export default function PoloDash({
   onComplete,
@@ -25,9 +27,16 @@ export default function PoloDash({
   const [playerLane, setPlayerLane] = useState(1); // 0 = Left, 1 = Center, 2 = Right
   const [score, setScore] = useState(0);
   const [polosCollected, setPolosCollected] = useState(0);
-  const [feedback, setFeedback] = useState(null); // { isCorrect: boolean, text: string }
   const [isDashing, setIsDashing] = useState(false);
+  const [isObstacleCleared, setIsObstacleCleared] = useState(false);
   const [isCourseFinished, setIsCourseFinished] = useState(false);
+
+  // Track collectible items in lanes for running fun
+  const [trackCandies, setTrackCandies] = useState([
+    { id: 1, lane: 0, collected: false },
+    { id: 2, lane: 1, collected: false },
+    { id: 3, lane: 2, collected: false },
+  ]);
 
   const currentObstacle = course[currentObstacleIdx] || course[0];
 
@@ -36,60 +45,70 @@ export default function PoloDash({
     if (targetLane < 0 || targetLane > 2 || isDashing) return;
     sounds.playPop();
     setPlayerLane(targetLane);
+
+    // Collect any candy in that lane
+    setTrackCandies((prev) =>
+      prev.map((item) => {
+        if (item.lane === targetLane && !item.collected) {
+          sounds.playPop();
+          setPolosCollected((p) => p + 1);
+          setScore((s) => s + 10);
+          return { ...item, collected: true };
+        }
+        return item;
+      })
+    );
   }, [isDashing]);
 
-  // Handle steering into a lane or clicking "Dash Through"
-  const handleConfirmLane = useCallback(() => {
-    if (feedback !== null || isDashing || isCourseFinished) return;
+  // Handle correct typed answer submission from PoloAnswerInput
+  const handleAnswerSubmit = ({ isCorrect }) => {
+    if (!isCorrect || isDashing || isCourseFinished || isObstacleCleared) return;
 
-    // Find the option in the player's current lane
-    const chosenOption = currentObstacle.options.find((opt) => opt.lane === playerLane);
-    if (!chosenOption) return;
+    sounds.playSuccess();
+    setIsObstacleCleared(true);
+    setIsDashing(true);
+    setScore((s) => s + 100);
+    setPolosCollected((p) => p + 10);
 
-    if (chosenOption.isCorrect) {
-      sounds.playSuccess();
-      setIsDashing(true);
-      setFeedback({
-        isCorrect: true,
-        text: chosenOption.feedback,
-      });
-      setScore((s) => s + 100);
-      setPolosCollected((p) => p + 10);
+    // Animate runner dashing through the unlocked obstacle
+    setTimeout(() => {
+      setIsDashing(false);
+      setIsObstacleCleared(false);
 
-      // Dash celebration
-      setTimeout(() => {
-        setIsDashing(false);
-        setFeedback(null);
-        if (currentObstacleIdx + 1 < course.length) {
-          setCurrentObstacleIdx((idx) => idx + 1);
-          setPlayerLane(1); // reset to center lane for next obstacle
-        } else {
-          // Course finished!
-          sounds.playVictory();
-          try {
-            confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
-          } catch {
-            // ignore
-          }
-          setIsCourseFinished(true);
-          if (onComplete) {
-            onComplete();
-          }
+      if (currentObstacleIdx + 1 < course.length) {
+        setCurrentObstacleIdx((idx) => idx + 1);
+        setPlayerLane(1);
+        // Respawn fresh track candies for the next leg
+        setTrackCandies([
+          { id: Date.now() + 1, lane: 0, collected: false },
+          { id: Date.now() + 2, lane: 1, collected: false },
+          { id: Date.now() + 3, lane: 2, collected: false },
+        ]);
+      } else {
+        // Entire course finished!
+        sounds.playVictory();
+        try {
+          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+        } catch {
+          // ignore
         }
-      }, 1600);
-    } else {
-      sounds.playIncorrect();
-      setFeedback({
-        isCorrect: false,
-        text: chosenOption.feedback,
-      });
-    }
-  }, [feedback, isDashing, isCourseFinished, currentObstacle, playerLane, currentObstacleIdx, course.length, onComplete]);
+        setIsCourseFinished(true);
+        if (onComplete) {
+          onComplete();
+        }
+      }
+    }, 1500);
+  };
 
-  // Keyboard navigation listener
+  // Keyboard navigation listener (disabled while child is typing into input)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (isCourseFinished) return;
+      if (isCourseFinished || isDashing) return;
+      // If typing in any input element, ignore runner steering keys
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+        return;
+      }
+
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         moveToLane(Math.max(0, playerLane - 1));
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
@@ -100,14 +119,12 @@ export default function PoloDash({
         moveToLane(1);
       } else if (e.key === '3') {
         moveToLane(2);
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        handleConfirmLane();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [playerLane, isCourseFinished, moveToLane, handleConfirmLane]);
+  }, [playerLane, isCourseFinished, isDashing, moveToLane]);
 
   const restartCourse = () => {
     setCourse(generatePoloDashCourse());
@@ -115,15 +132,20 @@ export default function PoloDash({
     setPlayerLane(1);
     setScore(0);
     setPolosCollected(0);
-    setFeedback(null);
     setIsDashing(false);
+    setIsObstacleCleared(false);
     setIsCourseFinished(false);
+    setTrackCandies([
+      { id: 1, lane: 0, collected: false },
+      { id: 2, lane: 1, collected: false },
+      { id: 3, lane: 2, collected: false },
+    ]);
     sounds.playPop();
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-3 flex flex-col gap-3 animate-fadeIn select-none">
-      {/* Top Bar */}
+      {/* Top Header Bar */}
       <div className="flex items-center justify-between gap-2 bg-[#09221b]/90 border border-emerald-500/50 rounded-2xl p-3 shadow-md">
         <button
           onClick={() => {
@@ -137,7 +159,7 @@ export default function PoloDash({
           <span>Stage Hub</span>
         </button>
 
-        {/* Progress Tracker */}
+        {/* Checkpoint Progress Tracker */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-black text-emerald-300 uppercase tracking-wider hidden sm:inline">
             Checkpoint {currentObstacleIdx + 1} of {course.length}
@@ -158,11 +180,14 @@ export default function PoloDash({
           </div>
         </div>
 
-        {/* Counter */}
-        <div className="flex items-center gap-3">
+        {/* Counters */}
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 text-xs font-black shadow-sm">
             <span>🍬</span>
             <span>{polosCollected} Polos</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-400/20 border border-amber-400 text-amber-300 text-xs font-black">
+            <span>⭐ {score} pts</span>
           </div>
         </div>
       </div>
@@ -170,65 +195,88 @@ export default function PoloDash({
       {/* Main Course Area */}
       {!isCourseFinished ? (
         <div className="relative bg-[#061d16]/95 border-3 border-emerald-400/80 rounded-[36px] p-4 sm:p-6 shadow-[0_0_50px_rgba(16,185,129,0.3)] backdrop-blur-md flex flex-col gap-4 overflow-hidden">
-          {/* Question / Challenge Banner */}
-          <div className="bg-gradient-to-r from-emerald-950/95 via-[#083527]/95 to-emerald-950/95 border-2 border-emerald-400/80 rounded-2xl p-3 sm:p-4 text-center shadow-md flex flex-col gap-1">
-            <div className="flex items-center justify-center gap-2 text-xs font-black text-amber-300 uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Obstacle Question Ahead!</span>
-            </div>
-            <h2 className="text-lg sm:text-2xl font-black text-white">
-              {currentObstacle.question}
-            </h2>
-            <p className="text-xs text-emerald-200/80">
-              Steer Pip into the lane with the correct answer and dash through!
-            </p>
-          </div>
-
+          
           {/* 3-Lane Runner Track with Perspective */}
-          <div className="relative h-72 sm:h-80 w-full rounded-3xl bg-gradient-to-b from-[#021811] via-[#052c20] to-[#083829] border-2 border-emerald-500/50 shadow-inner overflow-hidden flex flex-col justify-between p-3">
+          <div className="relative h-64 sm:h-72 w-full rounded-3xl bg-gradient-to-b from-[#021811] via-[#052c20] to-[#083829] border-2 border-emerald-500/50 shadow-inner overflow-hidden flex flex-col justify-between p-3">
             {/* Ambient Speed Lines */}
-            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[repeating-linear-gradient(0deg,transparent,transparent_20px,rgba(52,211,153,0.3)_20px,rgba(52,211,153,0.3)_22px)]" />
+            <div className={`absolute inset-0 pointer-events-none opacity-20 bg-[repeating-linear-gradient(0deg,transparent,transparent_20px,rgba(52,211,153,0.3)_20px,rgba(52,211,153,0.3)_22px)] ${
+              isDashing ? 'animate-pulse' : ''
+            }`} />
 
             {/* Lane Dividers */}
             <div className="absolute inset-y-0 left-1/3 w-0.5 border-r border-dashed border-emerald-400/30" />
             <div className="absolute inset-y-0 left-2/3 w-0.5 border-r border-dashed border-emerald-400/30" />
 
-            {/* Top: 3 Obstacle Gates */}
-            <div className="relative z-10 grid grid-cols-3 gap-2 w-full pt-1">
-              {currentObstacle.options.map((opt) => {
-                const isPlayerHere = playerLane === opt.lane;
-                return (
-                  <div
-                    key={opt.id}
-                    onClick={() => moveToLane(opt.lane)}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                      isPlayerHere
-                        ? 'bg-emerald-400/25 border-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.6)] scale-102'
-                        : 'bg-emerald-950/70 border-emerald-600/40 hover:border-emerald-400 hover:bg-emerald-900/60'
-                    }`}
-                  >
-                    <span className="text-2xl sm:text-3xl mb-1">{opt.icon}</span>
-                    <span className="text-xs sm:text-sm font-black text-white text-center leading-tight">
-                      {opt.text}
+            {/* Top: Checkpoint Obstacle Barrier Across All 3 Lanes */}
+            <div className="relative z-10 w-full pt-1">
+              <div className={`w-full p-2.5 sm:p-3 rounded-2xl border-2 transition-all flex items-center justify-between shadow-lg ${
+                isObstacleCleared
+                  ? 'bg-emerald-400/30 border-emerald-300 shadow-[0_0_30px_rgba(52,211,153,0.8)] scale-102'
+                  : 'bg-gradient-to-r from-emerald-950 via-[#073223] to-emerald-950 border-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)]'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl animate-bounce">
+                    {currentObstacle.obstacleIcon}
+                  </span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black uppercase text-amber-300 tracking-wider">
+                      Place-Value Obstacle #{currentObstacleIdx + 1}
                     </span>
-                    <span className="text-[10px] text-emerald-300 font-semibold mt-0.5">
-                      Lane {opt.lane === 0 ? 'Left' : opt.lane === 1 ? 'Center' : 'Right'}
+                    <span className="text-xs sm:text-sm font-black text-white">
+                      {isObstacleCleared ? 'Barrier Unlocked! Dashing through!' : 'Gate Locked • Type Answer Below To Clear'}
                     </span>
                   </div>
-                );
-              })}
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-black/40 border border-emerald-400/50 text-emerald-300 text-xs font-black">
+                  {isObstacleCleared ? (
+                    <span className="text-emerald-400 flex items-center gap-1 font-black">
+                      <Check className="w-4 h-4 stroke-[3]" />
+                      <span>CLEARED!</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-amber-300">
+                      <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                      <span>Locked Gate</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Middle: Floating Collectible Candies on Lanes */}
+            <div className="relative z-10 grid grid-cols-3 w-full py-2">
+              {trackCandies.map((item, idx) => (
+                <div key={item.id} className="flex justify-center items-center">
+                  {!item.collected ? (
+                    <div
+                      onClick={() => moveToLane(idx)}
+                      className="cursor-pointer animate-float hover:scale-125 transition-transform"
+                      title="Tap or steer here to collect loose Polo!"
+                    >
+                      <PoloCounter size="sm" numberLabel="+1" />
+                    </div>
+                  ) : (
+                    <span className="text-xs font-black text-emerald-400/40 select-none">
+                      ✨
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Bottom: Player Pip Runner in Current Lane */}
-            <div className="relative z-10 grid grid-cols-3 w-full pb-2">
+            <div className="relative z-10 grid grid-cols-3 w-full pb-1">
               {[0, 1, 2].map((laneIdx) => (
-                <div key={laneIdx} className="flex justify-center items-end min-h-[90px]">
+                <div key={laneIdx} className="flex justify-center items-end min-h-[80px]">
                   {playerLane === laneIdx && (
                     <div className={`flex flex-col items-center transition-all transform duration-300 ${
-                      isDashing ? 'scale-125 -translate-y-16 animate-bounce' : 'animate-float'
+                      isDashing
+                        ? 'scale-130 -translate-y-24 animate-bounce'
+                        : 'animate-float'
                     }`}>
-                      {/* Pip Character Avatar */}
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_0_25px_rgba(16,185,129,0.8)] border-2 border-white">
+                      {/* Pip Character Runner Avatar */}
+                      <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_0_25px_rgba(16,185,129,0.8)] border-2 border-white">
                         🐧
                       </div>
                       <span className="mt-1 px-2.5 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-400 text-emerald-300 text-[10px] font-black uppercase tracking-wider shadow">
@@ -241,126 +289,112 @@ export default function PoloDash({
             </div>
           </div>
 
-          {/* Feedback Display / Gentle Tip */}
-          {feedback && (
-            <div className={`p-3.5 rounded-2xl text-xs sm:text-sm font-bold text-center flex flex-col items-center gap-1.5 animate-fadeIn ${
-              feedback.isCorrect
-                ? 'bg-emerald-500/20 border-2 border-emerald-400 text-emerald-200'
-                : 'bg-amber-500/20 border-2 border-amber-400 text-amber-200'
-            }`}>
-              <div className="flex items-center gap-1.5 font-black text-white">
-                {feedback.isCorrect ? (
-                  <>
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <span>Obstacle Cleared! Awesome job!</span>
-                  </>
-                ) : (
-                  <>
-                    <span>💡 Almost! Let's check:</span>
-                  </>
-                )}
-              </div>
-              <p>{feedback.text}</p>
-              {!feedback.isCorrect && (
-                <button
-                  onClick={() => setFeedback(null)}
-                  type="button"
-                  className="mt-1 px-4 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs cursor-pointer shadow"
-                >
-                  Try Another Lane
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Touch / Click Lane Controls & Dash Button */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-emerald-800/50">
-            {/* Steering Buttons */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => moveToLane(0)}
-                type="button"
-                className={`flex-1 sm:flex-initial px-4 py-3 rounded-xl border font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  playerLane === 0
-                    ? 'bg-emerald-400 text-black border-emerald-300 shadow'
-                    : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
-                }`}
-              >
-                ◀ Left
-              </button>
-
-              <button
-                onClick={() => moveToLane(1)}
-                type="button"
-                className={`flex-1 sm:flex-initial px-4 py-3 rounded-xl border font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  playerLane === 1
-                    ? 'bg-emerald-400 text-black border-emerald-300 shadow'
-                    : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
-                }`}
-              >
-                ▲ Center
-              </button>
-
-              <button
-                onClick={() => moveToLane(2)}
-                type="button"
-                className={`flex-1 sm:flex-initial px-4 py-3 rounded-xl border font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  playerLane === 2
-                    ? 'bg-emerald-400 text-black border-emerald-300 shadow'
-                    : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
-                }`}
-              >
-                Right ▶
-              </button>
-            </div>
-
-            {/* Big "Dash Through Obstacle" Button */}
+          {/* Steer Lane Buttons (Accessible tap/mouse controls) */}
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-xs text-emerald-300/80 font-bold hidden sm:inline mr-2">
+              Steer Pip:
+            </span>
             <button
-              onClick={handleConfirmLane}
-              disabled={isDashing || feedback !== null}
+              onClick={() => moveToLane(0)}
+              disabled={isDashing}
               type="button"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 text-black font-black text-sm sm:text-base shadow-[0_0_25px_rgba(255,180,0,0.7)] transition-all transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              className={`px-3 sm:px-4 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                playerLane === 0
+                  ? 'bg-emerald-400 text-black border-emerald-300 shadow'
+                  : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
+              }`}
             >
-              <span>Dash Through Obstacle!</span>
-              <ArrowRight className="w-5 h-5 text-black" />
+              ◀ Left Lane
             </button>
+            <button
+              onClick={() => moveToLane(1)}
+              disabled={isDashing}
+              type="button"
+              className={`px-3 sm:px-4 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                playerLane === 1
+                  ? 'bg-emerald-400 text-black border-emerald-300 shadow'
+                  : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
+              }`}
+            >
+              ▲ Center Lane
+            </button>
+            <button
+              onClick={() => moveToLane(2)}
+              disabled={isDashing}
+              type="button"
+              className={`px-3 sm:px-4 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                playerLane === 2
+                  ? 'bg-emerald-400 text-black border-emerald-300 shadow'
+                  : 'bg-emerald-950 hover:bg-emerald-900 border-emerald-700 text-emerald-300'
+              }`}
+            >
+              Right Lane ▶
+            </button>
+          </div>
+
+          {/* Obstacle Question & Direct Answer Typing Panel */}
+          <div className="bg-gradient-to-r from-emerald-950/95 via-[#083527]/95 to-emerald-950/95 border-2 border-emerald-400/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2 text-xs font-black text-amber-300 uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Checkpoint Question • Type Answer To Clear</span>
+            </div>
+
+            <h2 className="text-base sm:text-xl font-black text-white text-center">
+              {currentObstacle.question}
+            </h2>
+
+            {/* Reusable Direct Typing Answer Input */}
+            <PoloAnswerInput
+              key={`dash_obs_${currentObstacle.id}_${currentObstacleIdx}`}
+              targetValue={currentObstacle.acceptableAnswers || currentObstacle.targetValue}
+              prefix={currentObstacle.equationPrompt ? currentObstacle.equationPrompt.replace('___', '') : ''}
+              suffix={currentObstacle.unitSuffix}
+              placeholder="Type answer..."
+              helperTip={currentObstacle.helperTip}
+              showKeypad={true}
+              disabled={isDashing || isObstacleCleared}
+              onSubmit={handleAnswerSubmit}
+            />
+
+            <p className="text-[11px] text-emerald-300/80 text-center max-w-md">
+              💡 Type your answer and click <strong>Check</strong> or press <strong>Enter</strong> to dash through!
+            </p>
           </div>
         </div>
       ) : (
-        /* Course Completed Victory Screen */
+        /* Course Finished Victory Screen */
         <div className="relative bg-gradient-to-b from-[#083022] via-[#052218] to-[#02130e] border-3 border-emerald-400 rounded-[36px] p-6 sm:p-9 text-center text-white shadow-[0_0_60px_rgba(16,185,129,0.5)] backdrop-blur-md flex flex-col items-center gap-4 animate-popIn">
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(255,180,0,0.8)] border-2 border-white animate-bounce">
-            🏆
+            🏃‍♂️
           </div>
 
           <div className="flex flex-col gap-1">
             <span className="text-xs font-black text-emerald-300 uppercase tracking-widest flex items-center justify-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Prerequisites Fully Satisfied!</span>
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span>Prerequisite Cleared!</span>
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-emerald-300 to-cyan-300 font-['Creepster',cursive] tracking-wide">
-              Polo Dash Completed!
+              Polo Dash Complete!
             </h2>
             <p className="text-sm text-emerald-100 max-w-md mx-auto mt-1">
-              Pip safely cleared all obstacles! You have proven complete understanding of Ones, Rolls (Tens), Packets (Hundreds), and Cartons (Thousands).
+              You ran the entire course and answered every place-value question correctly! Level 1 (Single-Digit Subtraction) is now unlocked!
             </p>
           </div>
 
-          {/* Stats Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-3 my-2">
-            <div className="px-4 py-2 rounded-2xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-black text-sm">
-              🍬 {polosCollected} Polos Collected
+          {/* Stats Bar */}
+          <div className="flex items-center justify-center gap-6 p-3 bg-emerald-950/80 border border-emerald-500/60 rounded-2xl w-full max-w-sm">
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-semibold text-emerald-300">Total Score</span>
+              <span className="text-xl font-black text-amber-300 font-mono">{score} pts</span>
             </div>
-            <div className="px-4 py-2 rounded-2xl bg-amber-950/80 border border-amber-500/60 text-amber-300 font-black text-sm">
-              ⭐ {score} Score Points
-            </div>
-            <div className="px-4 py-2 rounded-2xl bg-cyan-950/80 border border-cyan-500/60 text-cyan-300 font-black text-sm">
-              🔓 Level 1 Unlocked!
+            <div className="h-8 w-px bg-emerald-700/60" />
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-semibold text-emerald-300">Polos Collected</span>
+              <span className="text-xl font-black text-white font-mono">{polosCollected} 🍬</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full mt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full mt-3">
             <button
               onClick={() => {
                 sounds.playPop();
@@ -369,8 +403,8 @@ export default function PoloDash({
               type="button"
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 text-black font-black text-base shadow-[0_0_30px_rgba(16,185,129,0.8)] transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Go to Level 1: Polo Takeaway</span>
-              <ArrowRight className="w-5 h-5 text-black" />
+              <span>Unlock Level 1: Polo Takeaway</span>
+              <Sparkles className="w-5 h-5 text-black" />
             </button>
 
             <button
@@ -379,7 +413,7 @@ export default function PoloDash({
               className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-emerald-950/80 hover:bg-emerald-900 border-2 border-emerald-500/60 text-emerald-200 font-black text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-4 h-4 text-emerald-400" />
-              <span>Replay Course</span>
+              <span>Replay Polo Dash</span>
             </button>
           </div>
         </div>

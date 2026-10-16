@@ -1,16 +1,17 @@
 import React from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, Home } from 'lucide-react';
 import { sounds } from '../audio/soundEffects';
 
 /**
  * ModuleSelectScreen Component
- * Prompts the learner to choose between the two major educational modules:
- * 
- * 1. Module 1: Trick-or-Think (Place-value borrowing & candy regrouping)
- * 2. Module 2: Math O' Lantern (Counting up jumps & finding distance)
+ * Dedicated module selection screen for Spooktacular Trick.
+ * Displays the 3 core educational modules:
+ * 1. Trick-or-Think (Base-10 borrowing & candy regrouping)
+ * 2. Math O' Lantern (Counting up jumps & finding distance)
+ * 3. Polotastic (Place value units, manipulatives & borrowing notebook)
  */
 export default function ModuleSelectScreen({
-  onSelectModule, // (moduleId: 'trick_or_think' | 'math_o_lantern') => void
+  onSelectModule, // (moduleId: 'trick_or_think' | 'math_o_lantern' | 'polotastic') => void
   onBackToWelcome,
 }) {
   return (
@@ -21,10 +22,28 @@ export default function ModuleSelectScreen({
       className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 animate-fadeIn select-none"
     >
       <div className="bg-[#17082e]/98 border-3 border-purple-500/80 rounded-[40px] p-5 sm:p-8 text-center text-white shadow-[0_0_60px_rgba(184,69,255,0.45)] backdrop-blur-md flex flex-col gap-5 animate-popIn">
-        {/* Top Tag */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-900/80 border border-purple-400/50 text-amber-300 font-black text-xs uppercase tracking-wider mx-auto">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Choose Your Learning Adventure</span>
+        {/* Top Bar with Home Navigation and Badge */}
+        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+          {onBackToWelcome && (
+            <button
+              id="module-select-home-btn"
+              onClick={() => {
+                sounds.playPop();
+                onBackToWelcome();
+              }}
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-900/80 hover:bg-purple-800 text-purple-200 hover:text-white border border-purple-500/60 font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+              aria-label="Back to Home"
+            >
+              <Home className="w-4 h-4 text-amber-400" />
+              <span>← Home</span>
+            </button>
+          )}
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-900/80 border border-purple-400/50 text-amber-300 font-black text-xs uppercase tracking-wider ml-auto">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Choose Your Learning Adventure</span>
+          </div>
         </div>
 
         {/* Heading */}
@@ -42,7 +61,6 @@ export default function ModuleSelectScreen({
 
         {/* THREE MODULES CARDS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 my-1 text-left items-stretch">
-          
           {/* MODULE 1: TRICK-OR-THINK */}
           <div
             onClick={() => {
@@ -209,7 +227,7 @@ export default function ModuleSelectScreen({
               </div>
               <div className="flex items-center gap-1.5">
                 <span>⚡</span>
-                <span>Levels 1–3: Takeaway, Roll & Remove, Break a Roll</span>
+                <span>Levels 1–9: Takeaway, Regrouping & Written Notebook</span>
               </div>
             </div>
 
@@ -229,9 +247,10 @@ export default function ModuleSelectScreen({
               onBackToWelcome();
             }}
             type="button"
-            className="text-xs text-purple-300 hover:text-amber-300 transition-colors underline cursor-pointer mt-1 self-center"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-purple-300 hover:text-amber-300 transition-colors cursor-pointer mt-1 self-center hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 rounded-lg px-2 py-1"
           >
-            ← Back to Welcome Screen
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>← Back to Home</span>
           </button>
         )}
       </div>

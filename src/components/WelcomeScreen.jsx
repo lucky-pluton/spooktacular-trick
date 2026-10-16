@@ -1,275 +1,195 @@
-import React, { useState } from 'react';
-import { Sparkles, BookOpen, ArrowRight, Volume2, VolumeX } from 'lucide-react';
+import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { sounds } from '../audio/soundEffects';
 
 /**
  * WelcomeScreen Component
- * Dedicated welcoming experience for Spooktacular Trick.
- * Warm, friendly, and inviting for children, parents, and teachers.
- * Focuses purely on welcoming children without gameplay scene illustration boxes.
+ * Minimal, focused, and child-friendly landing page for Spooktacular Trick.
+ *
+ * Keeps ONLY:
+ * - App name: Spooktacular Trick
+ * - Tagline: "A little spooky. A lot of mathematical fun!"
+ * - Introduction: "Discover clever subtraction tricks, solve playful challenges, and become a maths master!"
+ * - One prominent primary button: "Start Playing"
+ * - Subtle Halloween-inspired decorative element: friendly ghost, pumpkin, and twinkling stars.
  */
-export default function WelcomeScreen({ onStart, onOpenStory, onSelectModule }) {
-  const [isPlayingAudioGreeting, setIsPlayingAudioGreeting] = useState(false);
-
-  const welcomeSpeechText =
-    "Welcome, Little Math Explorer! Step into our friendly Halloween math world. " +
-    "Together, we will explore candy sharing, base-ten regrouping, and the glowing lantern trail! " +
-    "Click Let's Start to begin our magical adventure!";
-
-  const handleAudioGreeting = () => {
-    if (isPlayingAudioGreeting) {
-      sounds.stopSpeech();
-      setIsPlayingAudioGreeting(false);
-    } else {
-      sounds.playPop();
-      setIsPlayingAudioGreeting(true);
-      sounds.speak(welcomeSpeechText);
-      setTimeout(() => setIsPlayingAudioGreeting(false), 9500);
-    }
+export default function WelcomeScreen({ onStart }) {
+  const handleStart = () => {
+    sounds.playSuccess();
+    if (onStart) onStart();
   };
 
   return (
-    <div className="relative z-30 w-full max-w-4xl mx-auto my-2 sm:my-4 px-2 sm:px-4 animate-fadeIn">
-      {/* Small playful decorative elements floating around the welcome card */}
-      <div className="absolute -top-3 -left-2 text-2xl sm:text-3xl animate-float pointer-events-none select-none drop-shadow-md" aria-hidden="true">
-        👻
-      </div>
-      <div className="absolute top-2 left-6 text-sm sm:text-base animate-pulse pointer-events-none select-none text-amber-300" aria-hidden="true">
-        ✨
-      </div>
-      <div className="absolute -top-3 -right-2 text-2xl sm:text-3xl animate-float pointer-events-none select-none drop-shadow-md" style={{ animationDelay: '1.2s' }} aria-hidden="true">
-        🎃
-      </div>
-      <div className="absolute top-2 right-6 text-sm sm:text-base animate-pulse pointer-events-none select-none text-amber-300" style={{ animationDelay: '0.8s' }} aria-hidden="true">
-        ⭐
-      </div>
-      <div className="absolute -bottom-3 -left-2 text-xl sm:text-2xl animate-float pointer-events-none select-none drop-shadow-md" style={{ animationDelay: '1.8s' }} aria-hidden="true">
-        🍁
-      </div>
-      <div className="absolute -bottom-3 -right-2 text-xl sm:text-2xl animate-float pointer-events-none select-none drop-shadow-md" style={{ animationDelay: '0.5s' }} aria-hidden="true">
-        🍂
-      </div>
-
-      {/* Main Welcoming Card Container */}
-      <div className="relative bg-[#1b0a33]/95 border-3 border-amber-400/90 rounded-[40px] p-5 sm:p-9 text-center text-white shadow-[0_0_60px_rgba(255,180,0,0.38)] backdrop-blur-md flex flex-col items-center gap-4 sm:gap-5 overflow-hidden">
-        
+    <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-10 flex flex-col items-center justify-center text-center animate-fadeIn">
+      {/* Central Welcoming Card with Generous Whitespace */}
+      <div className="relative w-full bg-[#17092e]/90 border-2 border-purple-500/40 rounded-[36px] sm:rounded-[48px] px-6 py-8 sm:px-12 sm:py-14 text-white shadow-[0_0_60px_rgba(168,85,247,0.22)] backdrop-blur-md flex flex-col items-center">
         {/* Subtle Ambient Background Glow */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Branding Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-900/80 via-purple-800/80 to-purple-900/80 border border-purple-400/60 text-amber-300 font-black text-xs sm:text-sm uppercase tracking-wider shadow-md">
-          <Sparkles className="w-4 h-4 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>Spooktacular Trick • Friendly Halloween Math</span>
-          <span className="text-amber-400">✨</span>
+        {/* Subtle Halloween-inspired Illustration (Friendly Ghost, Pumpkin, Stars) */}
+        <div className="mb-4 sm:mb-6">
+          <svg
+            viewBox="0 0 280 180"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-48 sm:w-60 md:w-68 h-auto mx-auto select-none drop-shadow-[0_10px_25px_rgba(255,160,0,0.25)]"
+            aria-hidden="true"
+            role="img"
+          >
+            <defs>
+              <linearGradient id="pumpkinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fb923c" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#c2410c" />
+              </linearGradient>
+              <linearGradient id="pumpkinCarve" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fef08a" />
+                <stop offset="100%" stopColor="#f59e0b" />
+              </linearGradient>
+              <linearGradient id="ghostBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="70%" stopColor="#f5f3ff" />
+                <stop offset="100%" stopColor="#ddd6fe" />
+              </linearGradient>
+            </defs>
+
+            {/* Soft warm background aura */}
+            <circle cx="140" cy="100" r="70" fill="#f59e0b" fillOpacity="0.08" filter="blur(20px)" />
+
+            {/* Star 1 - Top Left */}
+            <g className="animate-pulse" style={{ animationDuration: '3s' }}>
+              <path d="M 45 40 Q 55 40 55 30 Q 55 40 65 40 Q 55 40 55 50 Q 55 40 45 40 Z" fill="#fde047" />
+              <circle cx="55" cy="40" r="1.5" fill="#ffffff" />
+            </g>
+
+            {/* Star 2 - Top Right */}
+            <g className="animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '1s' }}>
+              <path d="M 225 35 Q 233 35 233 27 Q 233 35 241 35 Q 233 35 233 43 Q 233 35 225 35 Z" fill="#fde047" />
+              <circle cx="233" cy="35" r="1.2" fill="#ffffff" />
+            </g>
+
+            {/* Star 3 - Mid Right Small */}
+            <g className="animate-pulse" style={{ animationDuration: '3.5s', animationDelay: '1.5s' }}>
+              <path d="M 252 85 Q 256 85 256 81 Q 256 85 260 85 Q 256 85 256 89 Q 256 85 252 85 Z" fill="#fef08a" opacity="0.85" />
+            </g>
+
+            {/* Friendly Ghost Group with gentle float */}
+            <g className="animate-float">
+              {/* Ghost Shadow */}
+              <ellipse cx="98" cy="155" rx="26" ry="6" fill="#000000" fillOpacity="0.25" filter="blur(3px)" />
+
+              {/* Ghost Body */}
+              <path
+                d="M 68 85 C 68 50, 128 50, 128 85 C 128 105, 132 135, 122 142 C 114 148, 108 138, 98 143 C 88 138, 82 148, 74 142 C 64 135, 68 105, 68 85 Z"
+                fill="url(#ghostBodyGrad)"
+                stroke="#c4b5fd"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+
+              {/* Ghost Left Waving Arm */}
+              <path
+                d="M 69 90 C 52 82, 50 68, 56 64 C 62 60, 68 76, 73 84"
+                fill="url(#ghostBodyGrad)"
+                stroke="#c4b5fd"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+
+              {/* Ghost Right Arm */}
+              <path
+                d="M 125 94 C 138 98, 142 106, 137 112 C 132 116, 124 104, 122 100"
+                fill="url(#ghostBodyGrad)"
+                stroke="#c4b5fd"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+
+              {/* Ghost Friendly Eyes */}
+              <ellipse cx="88" cy="80" rx="4" ry="5.5" fill="#1e1b4b" />
+              <circle cx="86.5" cy="78" r="1.5" fill="#ffffff" />
+              <ellipse cx="108" cy="80" rx="4" ry="5.5" fill="#1e1b4b" />
+              <circle cx="106.5" cy="78" r="1.5" fill="#ffffff" />
+
+              {/* Ghost Rosy Cheeks */}
+              <ellipse cx="81" cy="87" rx="4" ry="2" fill="#f472b6" fillOpacity="0.55" />
+              <ellipse cx="115" cy="87" rx="4" ry="2" fill="#f472b6" fillOpacity="0.55" />
+
+              {/* Ghost Happy Open Mouth */}
+              <path
+                d="M 94 88 Q 98 96 102 88 Q 98 90 94 88 Z"
+                fill="#1e1b4b"
+              />
+            </g>
+
+            {/* Smiling Pumpkin Group */}
+            <g transform="translate(140, 75)">
+              {/* Pumpkin Shadow */}
+              <ellipse cx="44" cy="80" rx="40" ry="7" fill="#000000" fillOpacity="0.3" filter="blur(3px)" />
+
+              {/* Stem */}
+              <path
+                d="M 43 20 C 42 12, 47 4, 55 2 C 54 8, 49 14, 47 22 Z"
+                fill="#4d7c0f"
+                stroke="#365314"
+                strokeWidth="1"
+              />
+
+              {/* Back Ribs */}
+              <ellipse cx="22" cy="48" rx="18" ry="26" fill="#ea580c" />
+              <ellipse cx="66" cy="48" rx="18" ry="26" fill="#ea580c" />
+
+              {/* Middle Ribs */}
+              <ellipse cx="32" cy="49" rx="19" ry="28" fill="#f97316" />
+              <ellipse cx="56" cy="49" rx="19" ry="28" fill="#f97316" />
+
+              {/* Center Rib */}
+              <ellipse cx="44" cy="50" rx="18" ry="29" fill="url(#pumpkinGrad)" stroke="#c2410c" strokeWidth="1" />
+
+              {/* Carved Smiling Eyes */}
+              <polygon points="31,42 37,34 39,42" fill="url(#pumpkinCarve)" stroke="#b45309" strokeWidth="0.5" />
+              <polygon points="57,42 51,34 49,42" fill="url(#pumpkinCarve)" stroke="#b45309" strokeWidth="0.5" />
+
+              {/* Carved Little Nose */}
+              <polygon points="44,45 42,49 46,49" fill="url(#pumpkinCarve)" />
+
+              {/* Carved Happy Smile with little teeth */}
+              <path
+                d="M 28 54 Q 44 72 60 54 C 57 58, 54 58, 52 55 C 50 58, 47 58, 45 55 C 43 58, 40 58, 38 55 C 35 58, 31 57, 28 54 Z"
+                fill="url(#pumpkinCarve)"
+                stroke="#b45309"
+                strokeWidth="0.75"
+              />
+            </g>
+          </svg>
         </div>
 
-        {/* Welcoming Headline for Children */}
-        <div className="flex flex-col items-center gap-1.5">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200 font-['Creepster',cursive] tracking-wide leading-tight drop-shadow-lg">
-            Welcome, Little Math Explorer! 🎃
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-amber-200 font-semibold tracking-wide">
-            Where Subtraction Meets Playful Halloween Adventures & Gentle Learning
-          </p>
-        </div>
+        {/* 1. App Name */}
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200 font-['Creepster',cursive] tracking-wider leading-tight drop-shadow-md">
+          Spooktacular Trick
+        </h1>
 
-        {/* Short, Encouraging Introduction */}
-        <p className="text-sm sm:text-base md:text-lg text-purple-100 font-medium leading-relaxed max-w-2xl px-2">
-          Step into our enchanted Halloween world where subtraction is a friendly, smile-filled quest! 
-          Whether you're helping our friendly Haunted Houses regroup and share candies, or travelling 
-          with Ghostie along glowing lantern trails to reach friendly benchmark numbers, you'll discover 
-          that math is magical, joyful, and easy to understand.
+        {/* 2. Short Tagline */}
+        <p className="text-lg sm:text-2xl md:text-3xl text-amber-300 font-black tracking-wide mt-2 sm:mt-3">
+          A little spooky. A lot of mathematical fun!
         </p>
 
-        {/* Learning Adventure Preview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 w-full text-left my-1">
-          {/* Adventure One: Trick-or-Think */}
-          <div
-            onClick={() => {
-              sounds.playPop();
-              if (onSelectModule) onSelectModule('trick_or_think');
-              else onStart();
-            }}
-            className="group relative bg-purple-950/70 hover:bg-purple-900/80 border-2 border-purple-500/60 hover:border-amber-400 rounded-3xl p-4 sm:p-5 transition-all transform hover:scale-[1.02] cursor-pointer shadow-lg flex flex-col justify-between gap-3"
-          >
-            <div className="flex items-start gap-3">
-              <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-amber-400 text-black flex items-center justify-center text-2xl shadow font-black shrink-0 group-hover:rotate-6 transition-transform">
-                🏰
-              </span>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] uppercase font-black tracking-wider text-amber-300">
-                  Adventure One
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-white group-hover:text-amber-300 transition-colors">
-                  Trick-or-Think
-                </h3>
-                <p className="text-xs text-purple-200 leading-snug mt-1 font-medium">
-                  Help the Hundreds, Tens, and Ones houses borrow and share candies with excited trick-or-treaters!
-                </p>
-              </div>
-            </div>
+        {/* 3. One Brief Introduction */}
+        <p className="text-sm sm:text-base md:text-lg text-purple-100 font-medium leading-relaxed max-w-xl mx-auto mt-3 sm:mt-4 text-balance">
+          Discover clever subtraction tricks, solve playful challenges, and become a maths master!
+        </p>
 
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-purple-300">
-              <span className="bg-purple-900/80 px-2 py-0.5 rounded-lg border border-purple-600/50">
-                🍬 Base-10 Borrowing
-              </span>
-              <span className="bg-purple-900/80 px-2 py-0.5 rounded-lg border border-purple-600/50">
-                📖 Story Comic
-              </span>
-              <span className="bg-purple-900/80 px-2 py-0.5 rounded-lg border border-purple-600/50">
-                🖨️ Printable Worksheets
-              </span>
-            </div>
-          </div>
-
-          {/* Adventure Two: Math O' Lantern */}
-          <div
-            onClick={() => {
-              sounds.playPop();
-              if (onSelectModule) onSelectModule('math_o_lantern');
-              else onStart();
-            }}
-            className="group relative bg-[#072433]/80 hover:bg-[#0b3348]/90 border-2 border-teal-500/60 hover:border-emerald-400 rounded-3xl p-4 sm:p-5 transition-all transform hover:scale-[1.02] cursor-pointer shadow-lg flex flex-col justify-between gap-3"
-          >
-            <div className="flex items-start gap-3">
-              <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-400 to-emerald-400 text-black flex items-center justify-center text-2xl shadow font-black shrink-0 group-hover:-rotate-6 transition-transform">
-                🏮
-              </span>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] uppercase font-black tracking-wider text-teal-300">
-                  Adventure Two
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-white group-hover:text-teal-300 transition-colors">
-                  Math O' Lantern
-                </h3>
-                <p className="text-xs text-teal-200 leading-snug mt-1 font-medium">
-                  Hop with Ghostie along glowing trails! Count up through friendly benchmarks to discover the difference.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-teal-300">
-              <span className="bg-teal-950/80 px-2 py-0.5 rounded-lg border border-teal-600/50">
-                ⭐ Interactive Tutorial
-              </span>
-              <span className="bg-teal-950/80 px-2 py-0.5 rounded-lg border border-teal-600/50">
-                🎲 Fresh Questions
-              </span>
-              <span className="bg-teal-950/80 px-2 py-0.5 rounded-lg border border-teal-600/50">
-                🔒 Guided Challenges
-              </span>
-            </div>
-          </div>
-
-          {/* Adventure Three: Polotastic */}
-          <div
-            onClick={() => {
-              sounds.playPop();
-              if (onSelectModule) onSelectModule('polotastic');
-              else onStart();
-            }}
-            className="group relative bg-[#06241a]/80 hover:bg-[#083526]/90 border-2 border-emerald-500/60 hover:border-emerald-300 rounded-3xl p-4 sm:p-5 transition-all transform hover:scale-[1.02] cursor-pointer shadow-lg flex flex-col justify-between gap-3"
-          >
-            <div className="flex items-start gap-3">
-              <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-300 via-teal-300 to-cyan-300 text-black flex items-center justify-center text-2xl shadow font-black shrink-0 group-hover:rotate-6 transition-transform">
-                🍬
-              </span>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] uppercase font-black tracking-wider text-emerald-300">
-                  Adventure Three
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-white group-hover:text-emerald-300 transition-colors">
-                  Polotastic
-                </h3>
-                <p className="text-xs text-emerald-200 leading-snug mt-1 font-medium">
-                  Collect Polos, bundle rolls, packets & cartons, and master borrowing in "Break a Roll!"
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-emerald-300">
-              <span className="bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-600/50">
-                📖 Guidebook
-              </span>
-              <span className="bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-600/50">
-                🏃 Polo Dash Runner
-              </span>
-              <span className="bg-emerald-950/80 px-2 py-0.5 rounded-lg border border-emerald-600/50">
-                ⚡ Break a Roll!
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature Highlights Bar */}
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-purple-200 my-1">
-          <span className="bg-purple-900/60 border border-purple-600/50 px-3 py-1 rounded-xl flex items-center gap-1.5">
-            🔊 Child-Friendly Teacher Voice
-          </span>
-          <span className="bg-teal-900/60 border border-teal-600/50 px-3 py-1 rounded-xl flex items-center gap-1.5">
-            💡 Zero-Stress Encouragement
-          </span>
-          <span className="bg-amber-900/60 border border-amber-600/50 px-3 py-1 rounded-xl flex items-center gap-1.5">
-            🏆 Joyful Celebrations
-          </span>
-          <span className="bg-emerald-900/60 border border-emerald-600/50 px-3 py-1 rounded-xl flex items-center gap-1.5">
-            🎲 Dynamic Randomized Math
-          </span>
-        </div>
-
-        {/* Primary Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full mt-2">
-          {/* Prominent "Let's Start!" Button */}
+        {/* 4. One Prominent Primary Button */}
+        <div className="mt-8 sm:mt-10 w-full flex justify-center">
           <button
-            id="welcome-start-button"
-            onClick={() => {
-              sounds.playPop();
-              onStart();
-            }}
+            id="start-playing-button"
+            onClick={handleStart}
             type="button"
-            className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 hover:from-amber-300 hover:to-orange-400 text-black font-black text-base sm:text-lg shadow-[0_0_35px_rgba(255,180,0,0.85)] hover:shadow-[0_0_45px_rgba(255,180,0,1)] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full sm:w-auto min-w-[240px] px-8 sm:px-12 py-4 sm:py-5 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 hover:from-amber-300 hover:to-orange-400 text-black font-black text-lg sm:text-2xl shadow-[0_0_35px_rgba(255,180,0,0.65)] hover:shadow-[0_0_50px_rgba(255,180,0,0.9)] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-3.5 cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+            aria-label="Start Playing"
           >
-            <span>Let's Start!</span>
-            <ArrowRight className="w-5 h-5" />
-          </button>
-
-          {/* "Read Story Comic" Button */}
-          {onOpenStory && (
-            <button
-              onClick={() => {
-                sounds.playPop();
-                onOpenStory();
-              }}
-              type="button"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-purple-900/70 hover:bg-purple-800 text-purple-200 border-2 border-purple-500/70 font-black text-sm sm:text-base transition-all transform hover:scale-102 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              <BookOpen className="w-4 h-4 text-amber-400" />
-              <span>Read Story Comic</span>
-            </button>
-          )}
-
-          {/* Child-Friendly Female Teacher Voice Welcome Button */}
-          <button
-            onClick={handleAudioGreeting}
-            type="button"
-            className={`w-full sm:w-auto px-5 py-3.5 rounded-2xl border-2 font-black text-sm sm:text-base transition-all transform hover:scale-102 active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-md ${
-              isPlayingAudioGreeting
-                ? 'bg-amber-400 text-black border-amber-300 shadow-[0_0_20px_rgba(255,180,0,0.8)] animate-pulse'
-                : 'bg-teal-950/70 hover:bg-teal-900 text-teal-200 border-teal-500/60'
-            }`}
-            title="Listen to teacher voice welcome"
-          >
-            {isPlayingAudioGreeting ? (
-              <>
-                <VolumeX className="w-4 h-4 text-black" />
-                <span>Stop Voice</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-4 h-4 text-amber-300" />
-                <span>Teacher Voice 🔊</span>
-              </>
-            )}
+            <span>Start Playing</span>
+            <ArrowRight className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.75]" />
           </button>
         </div>
       </div>

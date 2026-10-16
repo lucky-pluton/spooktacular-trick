@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node scripts/verify-polotastic.js",
+    "test": "node scripts/verify-polotastic.js && node scripts/verify-simplified-homepage.js",
     "preview": "vite preview"
   },
   "dependencies": {

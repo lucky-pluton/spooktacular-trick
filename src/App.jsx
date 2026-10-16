@@ -89,22 +89,11 @@ export default function App() {
 
       {/* Main Content Area: Strictly renders only the selected module/screen */}
       <main className="flex-1 w-full flex flex-col justify-center py-2 sm:py-4">
-        {/* 1. WELCOME SCREEN (Dedicated for welcoming everyone) */}
+        {/* 1. WELCOME SCREEN (Minimal, focused landing page) */}
         {currentScreen === 'welcome' && (
           <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 flex flex-col justify-center items-center">
-            {/* Welcoming Experience Dedicated to Welcoming Everyone */}
             <WelcomeScreen
               onStart={() => setCurrentScreen('module_select')}
-              onOpenStory={() => setIsStoryOpen(true)}
-              onSelectModule={(mod) => {
-                if (mod === 'trick_or_think') {
-                  setCurrentScreen('trick_or_think_select');
-                } else if (mod === 'math_o_lantern') {
-                  setCurrentScreen('math_o_lantern');
-                } else if (mod === 'polotastic') {
-                  setCurrentScreen('polotastic');
-                }
-              }}
             />
           </div>
         )}
@@ -194,19 +183,23 @@ export default function App() {
       {/* Shared Application Footer */}
       <footer className="w-full bg-[#0a0314] border-t border-purple-900/60 py-3 px-4 text-center text-xs text-gray-400 print:hidden">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-medium">
+          <div className="flex items-center justify-center gap-1.5 font-medium mx-auto sm:mx-0">
+            <span>Spooktacular Trick</span>
+            <span>•</span>
             <span>Made with</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-            <span>for young math learners & Halloween trick-or-treaters</span>
+            <span>for young math learners</span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 font-semibold text-purple-300 text-[11px] sm:text-xs">
-            <span>Module 1: Trick-or-Think</span>
-            <span>•</span>
-            <span>Module 2: Math O' Lantern</span>
-            <span>•</span>
-            <span className="text-emerald-300">Module 3: Polotastic</span>
-          </div>
+          {currentScreen !== 'welcome' && (
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 font-semibold text-purple-300 text-[11px] sm:text-xs">
+              <span>Module 1: Trick-or-Think</span>
+              <span>•</span>
+              <span>Module 2: Math O' Lantern</span>
+              <span>•</span>
+              <span className="text-emerald-300">Module 3: Polotastic</span>
+            </div>
+          )}
         </div>
       </footer>
     </div>

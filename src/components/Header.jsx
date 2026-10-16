@@ -82,9 +82,9 @@ export default function Header({
             🎃
           </button>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-purple-300 font-['Creepster',cursive] tracking-wider leading-none">
+            <span className="text-lg sm:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-purple-300 font-['Creepster',cursive] tracking-wider leading-none">
               Spooktacular Trick
-            </h1>
+            </span>
 
             {/* Mode-Specific Identifier Badge */}
             {activeMode === 'game' && (
@@ -124,14 +124,14 @@ export default function Header({
 
             {activeMode === 'module_select' && (
               <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/60 text-purple-200 text-[11px] font-bold hidden sm:inline-flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Choose Module</span>
               </span>
             )}
           </div>
         </div>
 
-        {/* Center: Small, Unobtrusive Way to Return to Modules or Main Menu */}
+        {/* Center: Small, Unobtrusive Way to Return to Modules or Home */}
         {activeMode !== 'welcome' && onReturnToMenu && (
           <button
             onClick={() => {
@@ -139,11 +139,11 @@ export default function Header({
               onReturnToMenu();
             }}
             type="button"
-            className="px-3 py-1 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-gray-300 hover:text-white border border-purple-700/60 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102 active:scale-95"
+            className="px-3 py-1 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-gray-300 hover:text-white border border-purple-700/60 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-102 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             title={
               activeMode === 'game' || activeMode === 'notebook'
                 ? 'Return to Trick-or-Think menu'
-                : 'Return to module selection'
+                : 'Return to module selection or home'
             }
           >
             <ArrowLeft className="w-3.5 h-3.5 text-amber-400" />
@@ -152,15 +152,15 @@ export default function Header({
                 ? 'Main Menu'
                 : activeMode === 'math_o_lantern' || activeMode === 'trick_or_think_select' || activeMode === 'polotastic'
                 ? 'Modules'
-                : 'Welcome'}
+                : 'Home'}
             </span>
           </button>
         )}
 
         {/* Right: Sound, Voice, Story Comic, Share */}
         <div className="flex items-center gap-1.5">
-          {/* Story Comic Button */}
-          {onOpenStory && (
+          {/* Story Comic Button (Hidden on Welcome to keep homepage clutter-free) */}
+          {activeMode !== 'welcome' && onOpenStory && (
             <button
               onClick={() => {
                 sounds.playPop();
@@ -207,17 +207,19 @@ export default function Header({
             {voiceOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
           </button>
 
-          {/* Share Game Button */}
-          <button
-            onClick={handleShare}
-            type="button"
-            className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-extrabold text-xs flex items-center gap-1 shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-            title="Share Game"
-            aria-label="Share Game"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-black" /> : <Share2 className="w-3.5 h-3.5 text-black" />}
-            <span className="hidden md:inline">{copied ? 'Copied!' : 'Share'}</span>
-          </button>
+          {/* Share Game Button (Hidden on Welcome to keep homepage clutter-free) */}
+          {activeMode !== 'welcome' && (
+            <button
+              onClick={handleShare}
+              type="button"
+              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-black font-extrabold text-xs flex items-center gap-1 shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              title="Share Game"
+              aria-label="Share Game"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-black" /> : <Share2 className="w-3.5 h-3.5 text-black" />}
+              <span className="hidden md:inline">{copied ? 'Copied!' : 'Share'}</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

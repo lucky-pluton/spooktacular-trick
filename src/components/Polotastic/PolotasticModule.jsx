@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Lock, CheckCircle, Play, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Sparkles, Lock, CheckCircle, Play, RotateCcw, BookOpen, Gamepad2 } from 'lucide-react';
 import Guidebook from './Guidebook';
 import PoloDash from './PoloDash';
 import Level1Takeaway from './Level1Takeaway';
 import Level2RollRemove from './Level2RollRemove';
 import Level3BreakRoll from './Level3BreakRoll';
+import PolotasticBorrowGame from './PolotasticBorrowGame';
+import PolotasticNotebook from './PolotasticNotebook';
 import PipCharacter from './PipCharacter';
 import {
   getPolotasticProgress,
@@ -17,63 +19,50 @@ import { sounds } from '../../audio/soundEffects';
 
 /**
  * PolotasticModule Component
- * Dedicated container for the Polotastic Place-Value & Subtraction module.
  * 
- * Curriculum Progression:
- * 1. The Guidebook (Prerequisite 1: Learn the 4 place-value units & bundle exchanges)
- * 2. Polo Dash (Prerequisite 2: Runner game obstacle course testing units)
- * 3. Level 1: Polo Takeaway (Single-digit minus single-digit, no borrowing)
- * 4. Level 2: Roll & Remove (Two-digit minus one-digit, no borrowing)
- * 5. Level 3: Break a Roll! (Two-digit minus one-digit with borrowing / regrouping)
+ * Main Container for Polotastic:
+ * - Two distinct modes:
+ *   1. Play Mode: Hands-on Polo manipulatives, bundling animations, and guided column borrowing.
+ *   2. Notebook Mode: Real school maths copybook with squared paper, vertical regrouping annotations, and printable worksheets.
+ * - Complete 9-level progressive pathway from 1-digit through 4-digit subtraction with multi-step cascades.
  */
 export default function PolotasticModule({ onReturnToModules }) {
   const [progress, setProgress] = useState(() => getPolotasticProgress());
-  const [activeStageId, setActiveStageId] = useState('hub'); // 'hub' | 'guidebook' | 'polo_dash' | 'level1' | 'level2' | 'level3'
+  const [activeStageId, setActiveStageId] = useState('hub'); 
+  // 'hub' | 'guidebook' | 'polo_dash' | 'level1'..'level9'
+  
+  const [activeMode, setActiveMode] = useState(() => progress.mode || 'play'); 
+  // 'play' | 'notebook'
+  
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Stage completion handlers
-  const handleCompleteGuidebook = () => {
-    const updated = savePolotasticProgress({
-      guidebookCompleted: true,
-      polosCollected: (progress.polosCollected || 0) + 20,
-    });
-    setProgress(updated);
-    setActiveStageId('polo_dash');
+  // Compute unlocked level numbers for notebook mode
+  const unlockedLevelNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((lvl) => {
+    return getStageStatus(`level${lvl}`, progress) !== 'locked';
+  });
+
+  const handleModeSwitch = (newMode) => {
+    sounds.playPop();
+    setActiveMode(newMode);
+    savePolotasticProgress({ mode: newMode });
+    if (newMode === 'notebook') {
+      setActiveStageId('notebook');
+    } else {
+      setActiveStageId('hub');
+    }
   };
 
-  const handleCompletePoloDash = () => {
+  // Completion handlers for stages
+  const handleStageComplete = (stageId, nextStageId, bonusPolos) => {
+    const key = `${stageId}Completed`;
     const updated = savePolotasticProgress({
-      poloDashCompleted: true,
-      polosCollected: (progress.polosCollected || 0) + 50,
+      [key]: true,
+      polosCollected: (progress.polosCollected || 0) + bonusPolos,
     });
     setProgress(updated);
-    setActiveStageId('level1');
-  };
-
-  const handleCompleteLevel1 = () => {
-    const updated = savePolotasticProgress({
-      level1Completed: true,
-      polosCollected: (progress.polosCollected || 0) + 40,
-    });
-    setProgress(updated);
-    setActiveStageId('level2');
-  };
-
-  const handleCompleteLevel2 = () => {
-    const updated = savePolotasticProgress({
-      level2Completed: true,
-      polosCollected: (progress.polosCollected || 0) + 60,
-    });
-    setProgress(updated);
-    setActiveStageId('level3');
-  };
-
-  const handleCompleteLevel3 = () => {
-    const updated = savePolotasticProgress({
-      level3Completed: true,
-      polosCollected: (progress.polosCollected || 0) + 100,
-    });
-    setProgress(updated);
+    if (nextStageId) {
+      setActiveStageId(nextStageId);
+    }
   };
 
   const handleReset = () => {
@@ -81,6 +70,7 @@ export default function PolotasticModule({ onReturnToModules }) {
     setProgress(fresh);
     setShowResetConfirm(false);
     setActiveStageId('hub');
+    setActiveMode('play');
     sounds.playPop();
   };
 
@@ -100,71 +90,63 @@ export default function PolotasticModule({ onReturnToModules }) {
                   Polotastic
                 </h2>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-400/20 border border-emerald-400/60 text-emerald-300 text-[10px] font-black uppercase tracking-wider hidden xs:inline">
-                  Place Value & Subtraction
+                  Four-Digit Subtraction & Place Value
                 </span>
               </div>
               <p className="text-xs text-emerald-100 font-medium line-clamp-1">
-                Collect Polos, build bigger numbers, exchange bundles, and master subtraction!
+                Collect Polos, exchange bundles, and master borrowing through games and school maths copybook!
               </p>
             </div>
           </div>
 
-          {/* Quick Stage Tabs & Hub Button */}
+          {/* Mode Switcher Tabs (Play Mode vs Notebook Mode) */}
           <div className="flex items-center gap-2 flex-wrap justify-center">
-            {/* Stage Hub Tab */}
+            {/* Play Mode Button */}
             <button
-              onClick={() => {
-                sounds.playPop();
-                setActiveStageId('hub');
-              }}
+              onClick={() => handleModeSwitch('play')}
               type="button"
               className={`px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeStageId === 'hub'
+                activeMode === 'play' && activeStageId !== 'notebook'
                   ? 'bg-emerald-400 text-black shadow-md font-black scale-102'
                   : 'text-emerald-200 hover:text-white hover:bg-emerald-900/60'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Stages Hub</span>
+              <Gamepad2 className="w-3.5 h-3.5" />
+              <span>Play Mode</span>
             </button>
 
-            {/* Quick Level Shortcuts for Unlocked Stages */}
-            <div className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-emerald-500/30">
-              {POLOTASTIC_STAGES.map((stg) => {
-                const status = getStageStatus(stg.id, progress);
-                const isLocked = status === 'locked';
-                const isCompleted = status === 'completed';
-                const isActive = activeStageId === stg.id;
+            {/* Notebook Mode Button */}
+            <button
+              onClick={() => handleModeSwitch('notebook')}
+              type="button"
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeMode === 'notebook' || activeStageId === 'notebook'
+                  ? 'bg-amber-400 text-black shadow-md font-black scale-102'
+                  : 'text-emerald-200 hover:text-white hover:bg-emerald-900/60'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Notebook Mode</span>
+            </button>
 
-                return (
-                  <button
-                    key={stg.id}
-                    onClick={() => {
-                      if (!isLocked) {
-                        sounds.playPop();
-                        setActiveStageId(stg.id);
-                      }
-                    }}
-                    disabled={isLocked}
-                    type="button"
-                    title={isLocked ? stg.prereqText : stg.title}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-                      isActive
-                        ? 'bg-amber-400 text-black font-black'
-                        : isLocked
-                        ? 'opacity-35 cursor-not-allowed text-gray-400'
-                        : isCompleted
-                        ? 'text-emerald-300 hover:bg-emerald-900/50 cursor-pointer'
-                        : 'text-white hover:bg-emerald-900/50 cursor-pointer'
-                    }`}
-                  >
-                    <span>{stg.icon}</span>
-                    <span>{stg.badge}</span>
-                    {isCompleted && <span className="text-[10px]">✓</span>}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Stages Hub Button if in Play Mode */}
+            {activeMode === 'play' && (
+              <button
+                onClick={() => {
+                  sounds.playPop();
+                  setActiveStageId('hub');
+                }}
+                type="button"
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer ${
+                  activeStageId === 'hub'
+                    ? 'bg-teal-400 text-black shadow-md font-black'
+                    : 'text-emerald-200 hover:text-white hover:bg-emerald-900/60'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Stages Hub</span>
+              </button>
+            )}
 
             {/* Polos Collected Counter */}
             <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 text-xs font-black shadow-sm">
@@ -172,7 +154,7 @@ export default function PolotasticModule({ onReturnToModules }) {
               <span>{progress.polosCollected || 0}</span>
             </div>
 
-            {/* Back to Modules */}
+            {/* Back to Module Select */}
             {onReturnToModules && (
               <button
                 onClick={() => {
@@ -193,18 +175,72 @@ export default function PolotasticModule({ onReturnToModules }) {
 
       {/* 2. MAIN WORKSPACE AREA */}
       <div className="w-full flex-1 flex flex-col justify-center">
-        {/* VIEW A: STAGES SELECTION HUB */}
-        {activeStageId === 'hub' && (
-          <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-3 flex flex-col gap-5 animate-fadeIn">
+        {/* VIEW 1: DEDICATED NOTEBOOK MODE */}
+        {(activeMode === 'notebook' || activeStageId === 'notebook') && (
+          <PolotasticNotebook
+            initialLevel={unlockedLevelNumbers[unlockedLevelNumbers.length - 1] || 1}
+            unlockedLevels={unlockedLevelNumbers}
+            onReturnToHub={() => {
+              setActiveMode('play');
+              setActiveStageId('hub');
+            }}
+          />
+        )}
+
+        {/* VIEW 2: PLAY MODE - STAGES SELECTION HUB */}
+        {activeMode === 'play' && activeStageId === 'hub' && (
+          <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 flex flex-col gap-5 animate-fadeIn">
             {/* Mascot Greeting */}
             <PipCharacter
               mood="happy"
-              speechText="Welcome to Polotastic! Start with The Guidebook to discover how single Polos bundle into Rolls, Packets, and Cartons. Then race through Polo Dash to unlock Level 1 Subtraction!"
+              speechText="Welcome to Polotastic! Choose Play Mode to physically manipulate Polo containers and break bundles, or switch to Notebook Mode to write out calculations in your school maths copybook!"
               size="md"
             />
 
-            {/* Stage Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Mode Spotlight Banner */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                onClick={() => {
+                  sounds.playPop();
+                  setActiveStageId('guidebook');
+                }}
+                className="p-5 rounded-3xl bg-gradient-to-br from-emerald-950 via-[#072f23] to-[#031d16] border-2 border-emerald-400 shadow-lg cursor-pointer hover:scale-[1.01] transition-all flex items-center justify-between"
+              >
+                <div className="flex flex-col">
+                  <span className="text-xs font-black uppercase text-emerald-300 tracking-wider">
+                    🎮 Hands-On Learning
+                  </span>
+                  <h3 className="text-lg font-black text-white mt-1">
+                    Play Mode: Polo Manipulatives
+                  </h3>
+                  <p className="text-xs text-emerald-100/80 mt-1 max-w-sm">
+                    Physically unbundle rolls, packets, and cartons to discover place value!
+                  </p>
+                </div>
+                <span className="text-4xl">🍬</span>
+              </div>
+
+              <div
+                onClick={() => handleModeSwitch('notebook')}
+                className="p-5 rounded-3xl bg-gradient-to-br from-amber-950/80 via-[#2f2208] to-[#1d1603] border-2 border-amber-400 shadow-lg cursor-pointer hover:scale-[1.01] transition-all flex items-center justify-between"
+              >
+                <div className="flex flex-col">
+                  <span className="text-xs font-black uppercase text-amber-300 tracking-wider">
+                    📝 School Maths Copybook
+                  </span>
+                  <h3 className="text-lg font-black text-white mt-1">
+                    Notebook Mode: Written Regrouping
+                  </h3>
+                  <p className="text-xs text-amber-100/80 mt-1 max-w-sm">
+                    Squared paper workspace, pencil regrouping annotations, and printable worksheets!
+                  </p>
+                </div>
+                <span className="text-4xl">📖</span>
+              </div>
+            </div>
+
+            {/* 9-Stage Progressive Learning Pathway Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {POLOTASTIC_STAGES.map((stg) => {
                 const status = getStageStatus(stg.id, progress);
                 const isLocked = status === 'locked';
@@ -278,7 +314,7 @@ export default function PolotasticModule({ onReturnToModules }) {
                       {isLocked ? (
                         <div className="text-[11px] font-semibold text-gray-400 flex items-center gap-1">
                           <Lock className="w-3.5 h-3.5 shrink-0" />
-                          <span>{stg.prereqText}</span>
+                          <span className="truncate">{stg.prereqText}</span>
                         </div>
                       ) : (
                         <div className="w-full py-2 px-3 rounded-xl bg-emerald-400 text-black font-black text-xs text-center flex items-center justify-center gap-1.5 shadow">
@@ -294,7 +330,7 @@ export default function PolotasticModule({ onReturnToModules }) {
 
             {/* Bottom Controls: Reset Progress Option */}
             <div className="flex items-center justify-between text-xs text-emerald-300/80 px-2 pt-2 border-t border-emerald-900/60">
-              <span>All progress is safely saved on this device.</span>
+              <span>All progress is safely persisted in your browser.</span>
               <button
                 onClick={() => setShowResetConfirm(true)}
                 type="button"
@@ -307,49 +343,104 @@ export default function PolotasticModule({ onReturnToModules }) {
           </div>
         )}
 
-        {/* VIEW B: THE GUIDEBOOK */}
-        {activeStageId === 'guidebook' && (
+        {/* PREREQUISITE 1: THE GUIDEBOOK */}
+        {activeMode === 'play' && activeStageId === 'guidebook' && (
           <Guidebook
             isAlreadyCompleted={progress.guidebookCompleted}
-            onComplete={handleCompleteGuidebook}
+            onComplete={() => handleStageComplete('guidebook', 'polo_dash', 20)}
             onReturnToStages={() => setActiveStageId('hub')}
           />
         )}
 
-        {/* VIEW C: POLO DASH RUNNER */}
-        {activeStageId === 'polo_dash' && (
+        {/* PREREQUISITE 2: POLO DASH RUNNER */}
+        {activeMode === 'play' && activeStageId === 'polo_dash' && (
           <PoloDash
-            isAlreadyCompleted={progress.poloDashCompleted}
-            onComplete={handleCompletePoloDash}
+            onComplete={() => handleStageComplete('poloDash', 'level1', 50)}
             onReturnToStages={() => setActiveStageId('hub')}
           />
         )}
 
-        {/* VIEW D: LEVEL 1 POLO TAKEAWAY */}
-        {activeStageId === 'level1' && (
+        {/* LEVEL 1: POLO TAKEAWAY */}
+        {activeMode === 'play' && activeStageId === 'level1' && (
           <Level1Takeaway
-            isAlreadyCompleted={progress.level1Completed}
-            onComplete={handleCompleteLevel1}
+            onComplete={() => handleStageComplete('level1', 'level2', 40)}
             onNextLevel={() => setActiveStageId('level2')}
             onReturnToStages={() => setActiveStageId('hub')}
           />
         )}
 
-        {/* VIEW E: LEVEL 2 ROLL & REMOVE */}
-        {activeStageId === 'level2' && (
+        {/* LEVEL 2: ROLL & REMOVE */}
+        {activeMode === 'play' && activeStageId === 'level2' && (
           <Level2RollRemove
-            isAlreadyCompleted={progress.level2Completed}
-            onComplete={handleCompleteLevel2}
+            onComplete={() => handleStageComplete('level2', 'level3', 50)}
             onNextLevel={() => setActiveStageId('level3')}
             onReturnToStages={() => setActiveStageId('hub')}
           />
         )}
 
-        {/* VIEW F: LEVEL 3 BREAK A ROLL! */}
-        {activeStageId === 'level3' && (
+        {/* LEVEL 3: BREAK A ROLL! */}
+        {activeMode === 'play' && activeStageId === 'level3' && (
           <Level3BreakRoll
-            isAlreadyCompleted={progress.level3Completed}
-            onComplete={handleCompleteLevel3}
+            onComplete={() => handleStageComplete('level3', 'level4', 60)}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 4: TWO-DIGIT TAKEAWAY */}
+        {activeMode === 'play' && activeStageId === 'level4' && (
+          <PolotasticBorrowGame
+            levelNumber={4}
+            onComplete={() => handleStageComplete('level4', 'level5', 70)}
+            onNextLevel={() => setActiveStageId('level5')}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 5: PACKET BREAKER */}
+        {activeMode === 'play' && activeStageId === 'level5' && (
+          <PolotasticBorrowGame
+            levelNumber={5}
+            onComplete={() => handleStageComplete('level5', 'level6', 80)}
+            onNextLevel={() => setActiveStageId('level6')}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 6: THE EMPTY TENS CHALLENGE */}
+        {activeMode === 'play' && activeStageId === 'level6' && (
+          <PolotasticBorrowGame
+            levelNumber={6}
+            onComplete={() => handleStageComplete('level6', 'level7', 90)}
+            onNextLevel={() => setActiveStageId('level7')}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 7: CARTON BREAKER */}
+        {activeMode === 'play' && activeStageId === 'level7' && (
+          <PolotasticBorrowGame
+            levelNumber={7}
+            onComplete={() => handleStageComplete('level7', 'level8', 100)}
+            onNextLevel={() => setActiveStageId('level8')}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 8: THOUSAND-LEVEL MASTERY */}
+        {activeMode === 'play' && activeStageId === 'level8' && (
+          <PolotasticBorrowGame
+            levelNumber={8}
+            onComplete={() => handleStageComplete('level8', 'level9', 120)}
+            onNextLevel={() => setActiveStageId('level9')}
+            onReturnToStages={() => setActiveStageId('hub')}
+          />
+        )}
+
+        {/* LEVEL 9: POLOTASTIC GRAND CHALLENGE */}
+        {activeMode === 'play' && activeStageId === 'level9' && (
+          <PolotasticBorrowGame
+            levelNumber={9}
+            onComplete={() => handleStageComplete('level9', null, 150)}
             onReturnToStages={() => setActiveStageId('hub')}
           />
         )}
@@ -366,7 +457,7 @@ export default function PolotasticModule({ onReturnToModules }) {
             <span className="text-4xl">⚠️</span>
             <h3 className="text-xl font-black text-amber-300">Reset Progress?</h3>
             <p className="text-xs text-gray-300">
-              This will lock Levels 1, 2, and 3 and reset your Polos count so you can experience the adventure from the beginning.
+              This will lock Levels 1 through 9 and reset your earned Polos count so you can experience the progression from the beginning.
             </p>
             <div className="flex items-center justify-center gap-3 mt-2">
               <button

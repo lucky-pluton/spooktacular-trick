@@ -6,6 +6,20 @@ class SoundEngine {
     this.ctx = null;
     this.soundEnabled = true;
     this.voiceEnabled = true;
+    this.childVoice = null;
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const updateVoices = () => {
+        this.childVoice = this.findBestChildFriendlyVoice();
+      };
+      updateVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      }
+      if (window.speechSynthesis.addEventListener) {
+        window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+      }
+    }
   }
 
   init() {
@@ -263,14 +277,163 @@ class SoundEngine {
     }
   }
 
-  speak(text) {
-    if (!this.voiceEnabled || !('speechSynthesis' in window)) return;
+  findBestChildFriendlyVoice() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
     try {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return null;
+
+      let bestVoice = null;
+      let highestScore = -1000;
+
+      // Detect user language preference
+      const navLang = (typeof navigator !== 'undefined' && navigator.language)
+        ? navigator.language.toLowerCase()
+        : 'en-us';
+
+      for (let i = 0; i < voices.length; i++) {
+        const v = voices[i];
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+
+        // Must be English for our curriculum
+        if (!lang.startsWith('en')) continue;
+
+        let score = 0;
+
+        // 1. Dedicated & Natural Female Voices Across Major Platforms
+        // Microsoft Natural / Neural Female voices (Windows / Edge)
+        if (name.includes('jenny')) score += 120; // Microsoft Jenny - warm, friendly, natural
+        if (name.includes('aria')) score += 110;  // Microsoft Aria - expressive neural female
+        if (name.includes('michelle')) score += 100;
+        if (name.includes('ava')) score += 95;
+        if (name.includes('ana')) score += 95;
+        if (name.includes('zira')) score += 80;   // Windows standard desktop female
+
+        // Google / Android / Chrome Female Voices
+        if (name.includes('google uk english female')) score += 105;
+        if (name.includes('google us english')) score += 85;
+        if (name.includes('journey-f') || name.includes('wavenet-c') || name.includes('wavenet-e') || name.includes('standard-c') || name.includes('standard-e')) score += 100;
+
+        // Apple (macOS / iOS / iPadOS) Female Voices
+        if (name.includes('samantha')) score += 100; // Apple's standard friendly female voice
+        if (name.includes('victoria') || name.includes('karen') || name.includes('tessa')) score += 85;
+        if (name.includes('fiona') || name.includes('moira') || name.includes('serena') || name.includes('zoe') || name.includes('kate') || name.includes('allison') || name.includes('susan')) score += 80;
+
+        // Friendly, youthful, or female keywords
+        if (name.includes('child') || name.includes('kid') || name.includes('junior')) score += 110;
+        if (name.includes('female') || name.includes('woman') || name.includes('girl')) score += 60;
+        if (name.includes('natural') || name.includes('online') || name.includes('neural')) score += 40;
+
+        // Browser voice gender metadata if present
+        if (v.gender && String(v.gender).toLowerCase() === 'female') score += 50;
+
+        // Dialect preference matching user locale
+        if (lang === navLang) score += 25;
+        else if (lang === 'en-us') score += 20;
+        else if (lang === 'en-gb') score += 15;
+        else score += 10;
+
+        // Heavily penalize deep, robotic, or adult male desktop voices
+        const maleNames = ['david', 'mark', 'george', 'guy', 'richard', 'daniel', 'oliver', 'james', 'thomas', 'fred', 'alex', 'bruce', 'male'];
+        for (const male of maleNames) {
+          if (name.includes(male)) {
+            score -= 150;
+            break;
+          }
+        }
+        if (v.gender && String(v.gender).toLowerCase() === 'male') {
+          score -= 150;
+        }
+
+        if (score > highestScore) {
+          highestScore = score;
+          bestVoice = v;
+        }
+      }
+
+      if (bestVoice && highestScore > 0) return bestVoice;
+
+      // Fallback 1: Any English voice with female indicator
+      const anyFemale = voices.find(v => {
+        const n = (v.name || '').toLowerCase();
+        const l = (v.lang || '').toLowerCase();
+        return l.startsWith('en') && (n.includes('female') || n.includes('woman') || n.includes('girl') || n.includes('zira') || n.includes('samantha'));
+      });
+      if (anyFemale) return anyFemale;
+
+      // Fallback 2: Any English voice not explicitly named male
+      const anyNonMaleEn = voices.find(v => {
+        const n = (v.name || '').toLowerCase();
+        const l = (v.lang || '').toLowerCase();
+        return l.startsWith('en') && !n.includes('david') && !n.includes('mark') && !n.includes('guy') && !n.includes('male');
+      });
+      if (anyNonMaleEn) return anyNonMaleEn;
+
+      // Fallback 3: Any English voice
+      const anyEn = voices.find(v => (v.lang || '').toLowerCase().startsWith('en'));
+      if (anyEn) return anyEn;
+
+      return voices[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  cleanSpeechForKids(text) {
+    if (!text) return '';
+    let s = String(text);
+    // Replace subtraction minus expressions e.g. "500 − 36" or "500 - 36" -> "500 minus 36"
+    s = s.replace(/(\d+)\s*[-−–]\s*(\d+)/g, '$1 minus $2');
+    // Replace "+4" or "+60" -> "plus 4", "plus 60"
+    s = s.replace(/\+(\d+)/g, 'plus $1');
+    // Replace "=" -> "equals"
+    s = s.replace(/=/g, ' equals ');
+    // Replace arrows
+    s = s.replace(/(?:→|➡️)/g, ' to ');
+    // Place values pronunciation clarity
+    s = s.replace(/\b10s\b/g, 'tens');
+    s = s.replace(/\b100s\b/g, 'hundreds');
+    s = s.replace(/\b1s\b/g, 'ones');
+    // Remove emojis that may confuse child speech synthesizers
+    s = s.replace(/[\u{1F300}-\u{1FAFF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
+    // Clean multiple spaces
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
+  speak(text) {
+    if (!this.voiceEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      // Cancel any ongoing speech to prevent overlapping voices
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const cleaned = this.cleanSpeechForKids(text);
+      if (!cleaned) return;
+
+      const utterance = new SpeechSynthesisUtterance(cleaned);
       utterance.lang = 'en-US';
-      utterance.rate = 0.95;
-      utterance.pitch = 1.1; // Friendly slightly high pitch for kids
+
+      // Always select or refresh the child-friendly female voice
+      if (!this.childVoice) {
+        this.childVoice = this.findBestChildFriendlyVoice();
+      }
+      if (this.childVoice) {
+        utterance.voice = this.childVoice;
+        if (this.childVoice.lang) {
+          utterance.lang = this.childVoice.lang;
+        }
+      }
+
+      // Warm, encouraging pitch like a patient teacher (1.08 is gentle and natural, avoiding squeaky chipmunk pitch)
+      utterance.pitch = 1.08;
+      // Slightly slower than ordinary adult conversation (0.90) so children can follow instructions comfortably
+      utterance.rate = 0.90;
+      utterance.volume = 1.0;
+
+      // Chrome speech synthesis resume fix
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn('Speech error', e);
@@ -278,7 +441,7 @@ class SoundEngine {
   }
 
   stopSpeech() {
-    if ('speechSynthesis' in window) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
       } catch {

@@ -115,6 +115,13 @@ export default function Header({
               </span>
             )}
 
+            {activeMode === 'polotastic' && (
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/80 text-emerald-300 text-[11px] font-black uppercase tracking-wider hidden sm:inline-flex items-center gap-1 shadow-sm">
+                <span>🍬</span>
+                <span>Polotastic</span>
+              </span>
+            )}
+
             {activeMode === 'module_select' && (
               <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 border border-purple-500/60 text-purple-200 text-[11px] font-bold hidden sm:inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-400" />
@@ -143,7 +150,7 @@ export default function Header({
             <span>
               {activeMode === 'game' || activeMode === 'notebook'
                 ? 'Main Menu'
-                : activeMode === 'math_o_lantern' || activeMode === 'trick_or_think_select'
+                : activeMode === 'math_o_lantern' || activeMode === 'trick_or_think_select' || activeMode === 'polotastic'
                 ? 'Modules'
                 : 'Welcome'}
             </span>

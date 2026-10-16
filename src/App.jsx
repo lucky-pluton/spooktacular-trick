@@ -8,6 +8,7 @@ import GamePage from './components/GamePage';
 import NotebookMode from './components/NotebookMode';
 import MathOLanternModule from './components/MathOLantern/MathOLanternModule';
 import MathOLanternStoryModal from './components/MathOLantern/MathOLanternStoryModal';
+import PolotasticModule from './components/Polotastic/PolotasticModule';
 import ConnectedNeighbourhood from './components/ConnectedNeighbourhood';
 import PrintableWorksheet from './components/PrintableWorksheet';
 import { LEVELS } from './data/gameScenes';
@@ -25,6 +26,7 @@ import { Heart } from 'lucide-react';
  *    - Clear module-selection screen:
  *      • Module 1: Trick-or-Think ("Borrow, regroup, and help the houses share their candies!")
  *      • Module 2: Math O' Lantern ("Help Ghostie collect lanterns and discover the distance between numbers!")
+ *      • Module 3: Polotastic ("Collect Polos, build bigger numbers, exchange bundles, and master subtraction!")
  * 
  * 3. Module 1: Trick-or-Think
  *    - Screen 'trick_or_think_select': Game Mode vs Notebook Mode choice.
@@ -34,11 +36,14 @@ import { Heart } from 'lucide-react';
  * 4. Module 2: Math O' Lantern
  *    - Screen 'math_o_lantern': Counting up number jumps, Guided Journey & Lantern Sandbox.
  * 
+ * 5. Module 3: Polotastic
+ *    - Screen 'polotastic': Place value units, Polo Dash runner, Levels 1-3 subtraction without & with borrowing.
+ * 
  * Enforces strict separation: No controls or mode tabs from one module leak into the other.
  */
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('welcome');
-  // 'welcome' | 'module_select' | 'trick_or_think_select' | 'game' | 'notebook' | 'math_o_lantern'
+  // 'welcome' | 'module_select' | 'trick_or_think_select' | 'game' | 'notebook' | 'math_o_lantern' | 'polotastic'
 
   const [isStoryOpen, setIsStoryOpen] = useState(false); // Trick-or-Think candy borrowing comic
   const [isMathStoryOpen, setIsMathStoryOpen] = useState(false); // Math O' Lantern counting-up story
@@ -61,7 +66,11 @@ export default function App() {
         onReturnToMenu={() => {
           if (currentScreen === 'game' || currentScreen === 'notebook') {
             setCurrentScreen('trick_or_think_select');
-          } else if (currentScreen === 'trick_or_think_select' || currentScreen === 'math_o_lantern') {
+          } else if (
+            currentScreen === 'trick_or_think_select' ||
+            currentScreen === 'math_o_lantern' ||
+            currentScreen === 'polotastic'
+          ) {
             setCurrentScreen('module_select');
           } else if (currentScreen === 'module_select') {
             setCurrentScreen('welcome');
@@ -80,27 +89,23 @@ export default function App() {
 
       {/* Main Content Area: Strictly renders only the selected module/screen */}
       <main className="flex-1 w-full flex flex-col justify-center py-2 sm:py-4">
-        {/* 1. WELCOME & EXPLORATION SCREEN */}
+        {/* 1. WELCOME SCREEN (Dedicated for welcoming everyone) */}
         {currentScreen === 'welcome' && (
-          <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 flex flex-col gap-3">
-            {/* Welcoming Banner with Prominent "Let's Start!" Button */}
+          <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 flex flex-col justify-center items-center">
+            {/* Welcoming Experience Dedicated to Welcoming Everyone */}
             <WelcomeScreen
               onStart={() => setCurrentScreen('module_select')}
               onOpenStory={() => setIsStoryOpen(true)}
+              onSelectModule={(mod) => {
+                if (mod === 'trick_or_think') {
+                  setCurrentScreen('trick_or_think_select');
+                } else if (mod === 'math_o_lantern') {
+                  setCurrentScreen('math_o_lantern');
+                } else if (mod === 'polotastic') {
+                  setCurrentScreen('polotastic');
+                }
+              }}
             />
-
-            {/* Complete Connected Neighbourhood in Normal, Idle State */}
-            <div className="relative w-full">
-              <div className="text-center text-xs text-purple-300 font-bold mb-1">
-                🏰 The Haunted-House Community • Candy Lane 🏮
-              </div>
-              <ConnectedNeighbourhood
-                houses={idleHouses}
-                activeHouse="ones"
-                isQuestionVisible={false}
-                isIdleMode={true}
-              />
-            </div>
           </div>
         )}
 
@@ -112,6 +117,8 @@ export default function App() {
                 setCurrentScreen('trick_or_think_select');
               } else if (mod === 'math_o_lantern') {
                 setCurrentScreen('math_o_lantern');
+              } else if (mod === 'polotastic') {
+                setCurrentScreen('polotastic');
               }
             }}
             onBackToWelcome={() => setCurrentScreen('welcome')}
@@ -160,6 +167,13 @@ export default function App() {
             onReturnToModules={() => setCurrentScreen('module_select')}
           />
         )}
+
+        {/* 7. POLOTASTIC: DEDICATED PLACE-VALUE & REGROUPING MODULE */}
+        {currentScreen === 'polotastic' && (
+          <PolotasticModule
+            onReturnToModules={() => setCurrentScreen('module_select')}
+          />
+        )}
       </main>
 
       {/* TRICK-OR-THINK STORY COMIC MODAL */}
@@ -186,10 +200,12 @@ export default function App() {
             <span>for young math learners & Halloween trick-or-treaters</span>
           </div>
 
-          <div className="flex items-center gap-3 font-semibold text-purple-300">
-            <span>Module 1: Trick-or-Think (Regrouping)</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 font-semibold text-purple-300 text-[11px] sm:text-xs">
+            <span>Module 1: Trick-or-Think</span>
             <span>•</span>
-            <span>Module 2: Math O' Lantern (Counting Up)</span>
+            <span>Module 2: Math O' Lantern</span>
+            <span>•</span>
+            <span className="text-emerald-300">Module 3: Polotastic</span>
           </div>
         </div>
       </footer>
